@@ -1,0 +1,9 @@
+{
+    "files.exclude": {
+        "**/*.rpyc": true,
+        "**/*.rpa": true,
+        "**/*.rpymc": true,
+        "**/cache/": true
+    },
+    "renpyWarp.sdkPath": "c:/Users/tjt22/AppData/Roaming/Code/User/globalStorage/paisleysoftworks.renpywarp/file-downloader-downloads/8.5.2"
+}
