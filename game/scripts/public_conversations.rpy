@@ -4,6 +4,7 @@ init python:
 
 label public_start:
     "Starting public conversation"
+    $public_count = 0
 label public_choose:
     $public_count += 1
     menu public_options:
@@ -18,11 +19,26 @@ label public_end:
 
 
 label public_wait:
-    if public_count == public_max:
-        jump public_end
-    jump public_choose   
+    # Magic Numbers
+    $mc.decreasePresence(0.2)
+    if mc.getPresence() < 0.2:
+        blk.character "You're being rather quiet."
+    else:
+        blk.character "So anyway..."
+
+    jump public_finish_speaking
 
 label public_speak:
+    $mc.increasePresence(0.2)
+    if mc.getPresence() > 0.8:
+        blk.character "Please let me speak."
+    else:
+        mc.character "So anyway..."
+
+    jump public_finish_speaking
+
+label public_finish_speaking:
     if public_count == public_max:
-        jump public_end
+        jump public_start
+        # jump public_end
     jump public_choose   
