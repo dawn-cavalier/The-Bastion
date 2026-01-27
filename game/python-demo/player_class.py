@@ -13,7 +13,7 @@ class Player():
         self.reset()
 
     def __str__(self) -> str:
-        return f"Character: {self.character.name}\nPresence: {self.presence}"
+        return f"Character: {self.character.name}\nSeat: {self.seat}\nRole: {self.role.name}\nPresence: {self.presence}"
     
     def reset(self) -> None:
         self.presence = 0.5

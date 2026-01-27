@@ -3,7 +3,7 @@ from enum import IntEnum
 class Role(IntEnum):
     NONE = -1
     UNKNOWN = -1
-    # Good
+    ## Good
     # Villagers
     WASHERWOMAN = 0
     LIBRARIAN = 1
@@ -23,7 +23,7 @@ class Role(IntEnum):
     SAINT = 14
     RECLUSE = 15
     DRUNK = 16
-    # Evil
+    ## Evil
     # Minions
     POISONER = 17
     SPY = 18
