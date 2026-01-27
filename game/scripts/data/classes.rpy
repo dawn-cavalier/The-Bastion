@@ -6,8 +6,6 @@ init 0 python:
             self.character = character
 
             self._presence = 0.5
-            # Magic Number
-            self._doubt = (0.0 for _ in range(6))
 
         def decreasePresence(self, amount: float) -> None:
             self._presence -= amount
@@ -19,9 +17,7 @@ init 0 python:
             if self._presence > 1.0:
                 self._presence = 1.0
         
-        def getPresence(self) -> float:
-            return self._presence
-
-        def getDoubt(self, id: int) -> float:
-            return self._doubt[id]
+    class AIPlayer(Player):
+        def __init__(self, id: int, character: Character):
+            super.__init__(id, character)
 
