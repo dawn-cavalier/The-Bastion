@@ -31,3 +31,14 @@ class Role(IntEnum):
     SCARLET_WOMAN = 20
     # Demons
     IMP = 21
+
+class Alignment(IntEnum):
+    UNASSIGNED = -1
+    GOOD = 0
+    EVIL = 1
+
+class Status(IntEnum):
+    IS_DRUNK = 0
+    IS_POSOINED = 1
+    IS_RED_HERRING = 2
+    NO_ABILITY = 3
