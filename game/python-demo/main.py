@@ -30,8 +30,14 @@ def main() -> None:
     assignRoles(activeCharacters)
 
     for character in activeCharacters:
-        print(f"{character}\n")
+        if (character.role == Role.DRUNK):
+            print(f"{character}\n")
+            for token in character.reminderTokens:
+                print(f"{token}")
+
+
     ## Start Game
+    
 
 
 if __name__ == "__main__":

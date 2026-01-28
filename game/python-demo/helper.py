@@ -65,11 +65,19 @@ def assignRoles(activeCharacters: list[Player]) -> None:
     # Assign Roles
     shuffle(roleBag)
     for index, role in enumerate(roleBag):
-        activeCharacters[index].setTrueRole(role)
-        if role != Role.DRUNK:
-            activeCharacters[index].setKnownRole(role)
-        else:
+        activeCharacters[index].role = role
+        if role == Role.DRUNK:
             knownRole = sample(
-                [role for role in activeRoles if role not in townsfolk], 1
+                [
+                    role
+                    for role in activeRoles
+                    if role >= Role.WASHERWOMAN
+                    and role <= Role.MAYOR
+                    and role not in townsfolk
+                ],
+                1,
             )[0]
-            activeCharacters[index].setKnownRole(knownRole)
+            activeCharacters[index].reminderTokens.append((Role.DRUNK, knownRole))
+
+    # Sort by Seat Number
+    activeCharacters.sort(key=lambda character: character.seat)
