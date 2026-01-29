@@ -1,18 +1,9 @@
 from random import shuffle, sample
 
 from player_class import Player
-from enums.roles import (
-    Role,
-    Alignment,
-    Status,
-    isDemon,
-    isMinion,
-    isVillager,
-    isTownsfolk,
-    isOutsider,
-)
+from enums.roles import Role, Alignment, Status
 from enums.characters import Character
-from helper import assignRoles, buildGame
+from helper import *
 
 
 def main() -> None:
@@ -32,8 +23,12 @@ def main() -> None:
     # Minions Learn Minions
     # Minions Learn Demon
     # Demon Learns Minions
-    evilPlayers = [player for player in activePlayers if player.alignment == Alignment.EVIL]
-    goodPlayers = [player for player in activePlayers if player.alignment == Alignment.GOOD]
+    evilPlayers = [
+        player for player in activePlayers if player.alignment == Alignment.EVIL
+    ]
+    goodPlayers = [
+        player for player in activePlayers if player.alignment == Alignment.GOOD
+    ]
 
     for evilPlayer in evilPlayers:
         for player in goodPlayers:
@@ -90,14 +85,39 @@ def main() -> None:
     posioners = [player for player in activePlayers if player.role == Role.POISONER]
     for posioner in posioners:
         # TODO: Use the posioner's knowledge instead of activePlayers
-        targets = [player for player in activePlayers if player.alignment == Alignment.GOOD]
+        targets = [
+            player for player in activePlayers if player.alignment == Alignment.GOOD
+        ]
         # TODO: Add targeting logic and player logic
         # First night might as well be random as there is no information
         target = sample(targets, 1)[0]
         target.reminderTokens.append((Role.POISONER, Status.IS_POISONED))
-   
-    # Spy Learns the Grimore
-    
+
+    # Spy Learns the Grimoire
+    spies = [player for player in activePlayers if player.role == Role.SPY]
+    for spy in spies:
+        # Drunk or Poisoned Spies don't get to see the Grimoire
+        if isDrunkOrPoisoned(spy):
+            continue
+
+        for player in activePlayers:
+            spy.learn(
+                day,
+                spy.character,
+                f"PLAYER {player.character.name} IS ROLE {player.role.name}",
+            )
+            spy.learn(
+                day,
+                spy.character,
+                f"PLAYER {player.character.name} IS ALIGNMENT {player.alignment.name}",
+            )
+            for _, status in player.reminderTokens:
+                spy.learn(
+                    day,
+                    spy.character,
+                    f"PLAYER {player.character.name} HAS STATUS {status.name}",
+                )
+
     # Washerwoman Learns
     # Librarian Learns
     # Investigator Learns
@@ -107,14 +127,17 @@ def main() -> None:
     # Butler Chooses a Player
 
     # Debug printing
-    for character in activePlayers:
-        print(f"{character}")
-        if len(character.reminderTokens):
-            print("Reminder Tokens:")
-            for token in character.reminderTokens:
-                print(f"{token}")
-        print("")
+    # for character in activePlayers:
+    #     print(f"{character}")
+    #     if len(character.reminderTokens):
+    #         print("Reminder Tokens:")
+    #         for token in character.reminderTokens:
+    #             print(f"{token}")
+    #     print("")
 
+    spies = [player for player in activePlayers if player.role == Role.SPY]
+    for spy in spies:
+        print(spy.knowledgeBank)
     ## Start Game
 
 

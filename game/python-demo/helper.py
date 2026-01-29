@@ -1,8 +1,7 @@
 from random import shuffle, sample
 
 from player_class import Player
-from enums.roles import *
-
+from enums.roles import Role, Alignment, Status
 
 def buildGame(allPlayers: list[Player]) -> list[Player]:
     ## Micro Game Setup
@@ -24,7 +23,6 @@ def buildGame(allPlayers: list[Player]) -> list[Player]:
     assignRoles(activeCharacters)
 
     return activeCharacters
-
 
 def assignRoles(characters: list[Player]) -> None:
     # TODO: Dynamic assignment
@@ -115,3 +113,25 @@ def assignRoles(characters: list[Player]) -> None:
 
     # Sort by Seat Number
     characters.sort(key=lambda character: character.seat)
+
+def isVillager(role: Role) -> bool:
+    return role >= Role.WASHERWOMAN and role <= Role.DRUNK
+
+def isTownsfolk(role: Role) -> bool:
+    return role >= Role.WASHERWOMAN and role <= Role.MAYOR
+
+def isOutsider(role: Role) -> bool:
+    return role >= Role.BUTLER and role <= Role.DRUNK
+
+def isMinion(role: Role) -> bool:
+    return role >= Role.POISONER and role <= Role.SCARLET_WOMAN
+
+def isDemon(role: Role) -> bool:
+    return role >= Role.IMP and role <= Role.IMP
+
+def isDrunkOrPoisoned(player: Player) -> bool:
+    for (_, status) in player.reminderTokens:
+        if status == Status.IS_POISONED or status == Status.IS_DRUNK:
+            return True
+
+    return False
