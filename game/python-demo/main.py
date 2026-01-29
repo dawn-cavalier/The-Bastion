@@ -1,7 +1,16 @@
 from random import shuffle, sample
 
 from player_class import Player
-from enums.roles import Role, Alignment, Status, isDemon, isMinion, isVillager, isTownsfolk, isOutsider
+from enums.roles import (
+    Role,
+    Alignment,
+    Status,
+    isDemon,
+    isMinion,
+    isVillager,
+    isTownsfolk,
+    isOutsider,
+)
 from enums.characters import Character
 from helper import assignRoles, buildGame
 
@@ -23,8 +32,8 @@ def main() -> None:
     # Minions Learn Minions
     # Minions Learn Demon
     # Demon Learns Minions
-    evilPlayers = [evil for evil in activePlayers if evil.alignment == Alignment.EVIL]
-    goodPlayers = [good for good in activePlayers if good.alignment == Alignment.GOOD]
+    evilPlayers = [player for player in activePlayers if player.alignment == Alignment.EVIL]
+    goodPlayers = [player for player in activePlayers if player.alignment == Alignment.GOOD]
 
     for evilPlayer in evilPlayers:
         for player in goodPlayers:
@@ -58,16 +67,10 @@ def main() -> None:
                 )
 
     # Demon Learns Bluffs
-    demons = [
-        player
-        for player in activePlayers
-        if isDemon(player.role)
-    ]
+    demons = [player for player in activePlayers if isDemon(player.role)]
     for demon in demons:
         inPlayTownRoles = [
-            player.role
-            for player in activePlayers
-            if isVillager(player.role)
+            player.role for player in activePlayers if isVillager(player.role)
         ]
 
         notInPlayTownRoles = [
@@ -83,11 +86,18 @@ def main() -> None:
         for bluff in bluffs:
             demon.learn(day, Character.STORYTELLER, f"ROLE {bluff.name} IS NOT IN PLAY")
 
-        # for x in demon.knowledgeBank:
-        #     print(x)
-
     # Poisoner Posions a Character
+    posioners = [player for player in activePlayers if player.role == Role.POISONER]
+    for posioner in posioners:
+        # TODO: Use the posioner's knowledge instead of activePlayers
+        targets = [player for player in activePlayers if player.alignment == Alignment.GOOD]
+        # TODO: Add targeting logic and player logic
+        # First night might as well be random as there is no information
+        target = sample(targets, 1)[0]
+        target.reminderTokens.append((Role.POISONER, Status.IS_POISONED))
+   
     # Spy Learns the Grimore
+    
     # Washerwoman Learns
     # Librarian Learns
     # Investigator Learns

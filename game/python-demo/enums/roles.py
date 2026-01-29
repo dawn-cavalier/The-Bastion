@@ -42,7 +42,7 @@ class Alignment(IntEnum):
 
 class Status(IntEnum):
     IS_DRUNK = 0
-    IS_POSOINED = 1
+    IS_POISONED = 1
     IS_RED_HERRING = 2
     NO_ABILITY = 3
 
