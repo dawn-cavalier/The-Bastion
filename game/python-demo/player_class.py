@@ -9,8 +9,8 @@ class Player:
     presence: float
     trust: list[float]
     alignment: Alignment
-
-    reminderTokens: list[tuple[Role, Status]]    
+    reminderTokens: list[tuple[Role, Status]]
+    knowledgeBank: list
 
     def __init__(self, character: Character) -> None:
         self.character = character
@@ -32,5 +32,8 @@ class Player:
         self.trust = [0.5 for _ in Character]
         self.reminderTokens = []
         self.alignment = Alignment.UNASSIGNED
+        self.knowledgeBank = []
 
+    def learn(self, day: int, source: Character, information: any) -> None:
+        self.knowledgeBank.append((day, source, information))
  

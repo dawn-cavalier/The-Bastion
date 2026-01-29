@@ -1,6 +1,7 @@
 from enum import IntEnum
 
 class Character(IntEnum):
+    STORYTELLER = -1
     POV = 0
     RED = 1
     ORANGE = 2
