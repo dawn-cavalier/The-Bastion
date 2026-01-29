@@ -94,31 +94,66 @@ def main() -> None:
         target.reminderTokens.append((Role.POISONER, Status.IS_POISONED))
 
     # Spy Learns the Grimoire
-    spies = [player for player in activePlayers if player.role == Role.SPY]
-    for spy in spies:
+    tests = [player for player in activePlayers if player.role == Role.SPY]
+    for test in tests:
         # Drunk or Poisoned Spies don't get to see the Grimoire
-        if isDrunkOrPoisoned(spy):
+        if isDrunkOrPoisoned(test):
             continue
 
         for player in activePlayers:
-            spy.learn(
+            test.learn(
                 day,
-                spy.character,
+                test.character,
                 f"PLAYER {player.character.name} IS ROLE {player.role.name}",
             )
-            spy.learn(
+            test.learn(
                 day,
-                spy.character,
+                test.character,
                 f"PLAYER {player.character.name} IS ALIGNMENT {player.alignment.name}",
             )
             for _, status in player.reminderTokens:
-                spy.learn(
+                test.learn(
                     day,
-                    spy.character,
+                    test.character,
                     f"PLAYER {player.character.name} HAS STATUS {status.name}",
                 )
 
     # Washerwoman Learns
+    washerwomen = [
+        player for player in activePlayers if player.role == Role.WASHERWOMAN
+    ]
+    for washerwoman in washerwomen:
+        if isDrunkOrPoisoned(washerwoman):
+            continue
+
+        # TODO: More intelligent player selection
+        correctPlayer = sample(
+            [
+                player
+                for player in activePlayers
+                if isTownsfolk(player.role)
+                and player.character is not washerwoman.character
+            ],
+            1,
+        )[0]
+        wrongPlayer = sample(
+            [
+                player
+                for player in activePlayers
+                if player.character is not correctPlayer.character
+                and player.character is not washerwoman.character
+            ],
+            1,
+        )[0]
+        washerwoman.learn(
+            day, washerwoman.character, f"ROLE {correctPlayer.role.name} IS IN PLAY"
+        )
+        washerwoman.learn(
+            day,
+            washerwoman.character,
+            f"PLAYER {correctPlayer.character.name} OR PLAYER {wrongPlayer.character.name} ARE ROLE {correctPlayer.role.name}",
+        )
+
     # Librarian Learns
     # Investigator Learns
     # Chef Learns
@@ -135,9 +170,10 @@ def main() -> None:
     #             print(f"{token}")
     #     print("")
 
-    spies = [player for player in activePlayers if player.role == Role.SPY]
-    for spy in spies:
-        print(spy.knowledgeBank)
+    tests = [player for player in activePlayers if player.role == Role.WASHERWOMAN]
+    for test in tests:
+        print(test.reminderTokens)
+        print(test.knowledgeBank)
     ## Start Game
 
 
