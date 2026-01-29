@@ -1,7 +1,8 @@
 from random import shuffle, sample
 
 from player_class import Player
-from enums.roles import Role, Alignment, Status
+from enums.roles import *
+
 
 def buildGame(allPlayers: list[Player]) -> list[Player]:
     ## Micro Game Setup
@@ -24,6 +25,7 @@ def buildGame(allPlayers: list[Player]) -> list[Player]:
 
     return activeCharacters
 
+
 def assignRoles(characters: list[Player]) -> None:
     # TODO: Dynamic assignment
     # Fill Bag
@@ -37,27 +39,19 @@ def assignRoles(characters: list[Player]) -> None:
 
     # TODO: More intelligently select roles
     townsfolk = sample(
-        [
-            role
-            for role in activeRoles
-            if role >= Role.WASHERWOMAN and role <= Role.MAYOR
-        ],
+        [role for role in activeRoles if isTownsfolk(role)],
         townsfolkCount,
     )
     outsiders = sample(
-        [role for role in activeRoles if role >= Role.BUTLER and role <= Role.DRUNK],
+        [role for role in activeRoles if isOutsider(role)],
         outsiderCount,
     )
     minions = sample(
-        [
-            role
-            for role in activeRoles
-            if role >= Role.POISONER and role <= Role.SCARLET_WOMAN
-        ],
+        [role for role in activeRoles if isMinion(role)],
         minionCount,
     )
     demons = sample(
-        [role for role in activeRoles if role >= Role.IMP and role <= Role.IMP],
+        [role for role in activeRoles if isDemon(role)],
         demonCount,
     )
 
@@ -107,9 +101,17 @@ def assignRoles(characters: list[Player]) -> None:
             character.reminderTokens.append((Role.DRUNK, Status.IS_DRUNK))
         if character.role == Role.FORTUNE_TELLER:
             # TODO: Smarter Red Herring Logic
-            redHerring = sample([character for character in characters if character.alignment == Alignment.GOOD], 1)[0]
-            redHerring.reminderTokens.append((Role.FORTUNE_TELLER, Status.IS_RED_HERRING))
-
+            redHerring = sample(
+                [
+                    character
+                    for character in characters
+                    if character.alignment == Alignment.GOOD
+                ],
+                1,
+            )[0]
+            redHerring.reminderTokens.append(
+                (Role.FORTUNE_TELLER, Status.IS_RED_HERRING)
+            )
 
     # Sort by Seat Number
     characters.sort(key=lambda character: character.seat)

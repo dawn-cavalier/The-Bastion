@@ -1,4 +1,4 @@
-from enums.roles import Role, Alignment, Status
+from enums.roles import Role, Alignment, Status, isDemon, isMinion, isVillager, isTownsfolk, isOutsider
 from enums.characters import Character
 
 

@@ -1,7 +1,7 @@
 from random import shuffle, sample
 
 from player_class import Player
-from enums.roles import Role, Alignment
+from enums.roles import Role, Alignment, Status, isDemon, isMinion, isVillager, isTownsfolk, isOutsider
 from enums.characters import Character
 from helper import assignRoles, buildGame
 
@@ -31,37 +31,61 @@ def main() -> None:
             evilPlayer.learn(
                 day,
                 Character.STORYTELLER,
-                f"{player.character.name} ALIGNMENT IS {Alignment.GOOD.name}",
+                f"PLAYER {player.character.name} ALIGNMENT IS {Alignment.GOOD.name}",
             )
         otherEvils = [
             evil for evil in evilPlayers if evil.character != evilPlayer.character
         ]
-        
+
         for otherEvil in otherEvils:
             name = otherEvil.character.name
             evilPlayer.learn(
                 day,
                 Character.STORYTELLER,
-                f"{name} ALIGNMENT IS {Alignment.EVIL.name}",
+                f"PLAYER {name} ALIGNMENT IS {Alignment.EVIL.name}",
             )
-            if otherEvil.role >= Role.POISONER and otherEvil.role <= Role.SCARLET_WOMAN:
+            if isMinion(otherEvil.role):
                 evilPlayer.learn(
                     day,
                     Character.STORYTELLER,
-                    f"{name} CATEGORY IS MINION",
+                    f"PLAYER {name} CATEGORY IS MINION",
                 )
-            if otherEvil.role >= Role.IMP and otherEvil.role <= Role.IMP:
+            if isDemon(otherEvil.role):
                 evilPlayer.learn(
                     day,
                     Character.STORYTELLER,
-                    f"{name} CATEGORY IS DEMON",
+                    f"PLAYER {name} CATEGORY IS DEMON",
                 )
-
-    for player in evilPlayers:
-        for knowledge in player.knowledgeBank:
-            print(f"{player.character.name} knows {knowledge}")
 
     # Demon Learns Bluffs
+    demons = [
+        player
+        for player in activePlayers
+        if isDemon(player.role)
+    ]
+    for demon in demons:
+        inPlayTownRoles = [
+            player.role
+            for player in activePlayers
+            if isVillager(player.role)
+        ]
+
+        notInPlayTownRoles = [
+            role
+            for role in Role
+            if role not in inPlayTownRoles
+            and isVillager(role)
+            and role is not Role.DRUNK
+        ]
+
+        # TODO: Smarter Bluff Selection Logic
+        bluffs = sample(notInPlayTownRoles, 3)
+        for bluff in bluffs:
+            demon.learn(day, Character.STORYTELLER, f"ROLE {bluff.name} IS NOT IN PLAY")
+
+        # for x in demon.knowledgeBank:
+        #     print(x)
+
     # Poisoner Posions a Character
     # Spy Learns the Grimore
     # Washerwoman Learns
@@ -73,13 +97,13 @@ def main() -> None:
     # Butler Chooses a Player
 
     # Debug printing
-    # for character in activePlayers:
-    #     print(f"{character}")
-    #     if len(character.reminderTokens):
-    #         print("Reminder Tokens:")
-    #         for token in character.reminderTokens:
-    #             print(f"{token}")
-    #     print("")
+    for character in activePlayers:
+        print(f"{character}")
+        if len(character.reminderTokens):
+            print("Reminder Tokens:")
+            for token in character.reminderTokens:
+                print(f"{token}")
+        print("")
 
     ## Start Game
 
