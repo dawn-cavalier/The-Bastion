@@ -90,8 +90,8 @@ def main() -> None:
 
     # Spy Learns the Grimoire
     spies = [player for player in activePlayers if player.role == Role.SPY]
-    for spy in spies:
-        spyActs(spy, day, activePlayers)
+    for player in spies:
+        spyActs(player, day, activePlayers)
 
     # Washerwoman Learns
     washerwomen = [
@@ -106,6 +106,10 @@ def main() -> None:
         librarianActs(librarian, day, activePlayers)
 
     # Investigator Learns
+    investigators = [player for player in activePlayers if player.role == Role.INVESTIGATOR]
+    for investigator in investigators:
+        investigatorActs(investigator, day, activePlayers)
+
     # Chef Learns
     # Empath Learns
     # Fortune Teller Chooses Two Players and Learns
@@ -120,11 +124,10 @@ def main() -> None:
     #             print(f"{token}")
     #     print("")
 
-    spies = [player for player in activePlayers]
-    for spy in spies:
-        print(f"{spy.character.name}: {spy.role.name}")
-        print(spy.reminderTokens)
-        print(spy.knowledgeBank)
+    # for player in activePlayers:
+    #     print(f"{player.character.name}: {player.role.name}")
+    #     print(player.reminderTokens)
+    #     print(player.knowledgeBank)
     ## Start Game
 
 

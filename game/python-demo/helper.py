@@ -300,7 +300,7 @@ def washerwomanActs(washerwoman: Player, day: int, activePlayers: list[Player]) 
     )
 
 
-def librarianActs(librarian, day, activePlayers) -> None:
+def librarianActs(librarian: Player, day: int, activePlayers: list[Player]) -> None:
     outsiders = [
         player
         for player in activePlayers
@@ -310,7 +310,7 @@ def librarianActs(librarian, day, activePlayers) -> None:
 
     # TODO: Add Drunk Or Poison logic
     if isDrunkOrPoisoned(librarian):
-
+        print("Implement Librarian's misinfo")
         return
 
     if len(outsiders) == 0:
@@ -344,5 +344,40 @@ def librarianActs(librarian, day, activePlayers) -> None:
     librarian.learn(
         day,
         librarian.character,
-        f"PLAYER {learnedPlayers[0].character.name} OR PLAYER {learnedPlayers[1].character.name} ARE {roleLearned.name}",
+        f"PLAYER {learnedPlayers[0].character.name} OR PLAYER {learnedPlayers[1].character.name} ARE ROLE {roleLearned.name}",
     )
+
+
+def investigatorActs(
+    investigator: Player, day: int, activePlayers: list[Player]
+) -> None:
+    # TODO: Add Drunk Or Poison logic
+    if isDrunkOrPoisoned(investigator):
+        print("Implement Investigator's misinfo")
+        return
+
+    # TODO: Better Character Selection
+    minions = [player for player in activePlayers if isMinion(player.role)]
+    correctPlayer = sample(minions, 1)[0]
+    wrongPlayer = sample(
+        [
+            player
+            for player in activePlayers
+            if player.character is not correctPlayer.character
+            and player.character is not investigator.character
+        ],
+        1,
+    )[0]
+
+    learnedPlayers = [correctPlayer, wrongPlayer]
+    shuffle(learnedPlayers)
+
+    investigator.learn(day, investigator.character, f"ROLE {correctPlayer.role.name} IS IN PLAY")
+    investigator.learn(
+        day,
+        investigator.character,
+        f"PLAYER {learnedPlayers[0].character.name} OR PLAYER {learnedPlayers[1].character.name} ARE ROLE {correctPlayer.role.name}",
+    )
+
+    for info in investigator.knowledgeBank:
+        print(info)
