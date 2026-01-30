@@ -170,16 +170,65 @@ def main() -> None:
             ],
             1,
         )[0]
+        learnedPlayers = [correctPlayer, wrongPlayer]
+        shuffle(learnedPlayers)
+
         washerwoman.learn(
             day, washerwoman.character, f"ROLE {correctPlayer.role.name} IS IN PLAY"
         )
         washerwoman.learn(
             day,
             washerwoman.character,
-            f"PLAYER {correctPlayer.character.name} OR PLAYER {wrongPlayer.character.name} ARE ROLE {correctPlayer.role.name}",
+            f"PLAYER {learnedPlayers[0].character.name} OR PLAYER {learnedPlayers[1].character.name} ARE ROLE {correctPlayer.role.name}",
         )
 
     # Librarian Learns
+    librarians = [player for player in activePlayers if player.role == Role.LIBRARIAN]
+    for librarian in librarians:
+        # TODO: Add Drunk Or Poison logic
+        if isDrunkOrPoisoned(librarian):
+            continue
+
+        outsiders = [
+            player
+            for player in activePlayers
+            if isOutsider(player.role)
+            or (Role.DRUNK, Status.IS_DRUNK) in player.reminderTokens
+        ]
+
+        if len(outsiders) == 0:
+            librarian.learn(day, librarian.character, f"{Role.DRUNK} IS NOT IN PLAY")
+            librarian.learn(day, librarian.character, f"{Role.BUTLER} IS NOT IN PLAY")
+            librarian.learn(day, librarian.character, f"{Role.SAINT} IS NOT IN PLAY")
+            librarian.learn(day, librarian.character, f"{Role.RECLUSE} IS NOT IN PLAY")
+            # TODO: Make dynamic based on starting outsider count
+            librarian.learn(day, librarian.character, f"{Role.BARON} IS NOT IN PLAY")
+            continue
+
+        # TODO: Make smarter player selection logic
+        correctPlayer = sample(outsiders, 1)[0]
+        wrongPlayer = sample(
+            [
+                player
+                for player in allPlayers
+                if player is not correctPlayer and player is not librarian
+            ],
+            1,
+        )[0]
+        learnedPlayers = [correctPlayer, wrongPlayer]
+        shuffle(learnedPlayers)
+
+        roleLearned = correctPlayer.role
+        if (Role.DRUNK, Status.IS_DRUNK) in correctPlayer.reminderTokens:
+            roleLearned = Role.DRUNK
+
+        librarian.learn(day, librarian.character, f"ROLE {roleLearned.name} IS IN PLAY")
+        librarian.learn(
+            day,
+            librarian.character,
+            f"PLAYER {learnedPlayers[0].character.name} OR PLAYER {learnedPlayers[1].character.name} ARE {roleLearned.name}",
+        )
+
     # Investigator Learns
     # Chef Learns
     # Empath Learns
@@ -187,15 +236,15 @@ def main() -> None:
     # Butler Chooses a Player
 
     # Debug printing
-    for character in activePlayers:
-        print(f"{character}")
-        if len(character.reminderTokens):
-            print("Reminder Tokens:")
-            for token in character.reminderTokens:
-                print(f"{token}")
-        print("")
+    # for character in activePlayers:
+    #     print(f"{character}")
+    #     if len(character.reminderTokens):
+    #         print("Reminder Tokens:")
+    #         for token in character.reminderTokens:
+    #             print(f"{token}")
+    #     print("")
 
-    tests = [player for player in activePlayers if player.role == Role.WASHERWOMAN]
+    tests = [player for player in activePlayers if player.role == Role.LIBRARIAN]
     for test in tests:
         print(test.reminderTokens)
         print(test.knowledgeBank)
