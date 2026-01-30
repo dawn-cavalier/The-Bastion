@@ -123,7 +123,32 @@ def main() -> None:
         player for player in activePlayers if player.role == Role.WASHERWOMAN
     ]
     for washerwoman in washerwomen:
+        # TODO: Implement smarter drunk logic
         if isDrunkOrPoisoned(washerwoman):
+            roleLearned = sample(
+                [
+                    role
+                    for role in Role
+                    if isVillager(role) and role is not Role.WASHERWOMAN
+                ],
+                1,
+            )[0]
+            playersLearned = sample(
+                [
+                    player
+                    for player in activePlayers
+                    if player is not washerwoman and player is not roleLearned
+                ],
+                2,
+            )
+            washerwoman.learn(
+                day, washerwoman.character, f"ROLE {roleLearned.name} IS IN PLAY"
+            )
+            washerwoman.learn(
+                day,
+                washerwoman.character,
+                f"PLAYER {playersLearned[0].character.name} OR PLAYER {playersLearned[1].character.name} ARE ROLE {roleLearned.name}",
+            )
             continue
 
         # TODO: More intelligent player selection
@@ -162,13 +187,13 @@ def main() -> None:
     # Butler Chooses a Player
 
     # Debug printing
-    # for character in activePlayers:
-    #     print(f"{character}")
-    #     if len(character.reminderTokens):
-    #         print("Reminder Tokens:")
-    #         for token in character.reminderTokens:
-    #             print(f"{token}")
-    #     print("")
+    for character in activePlayers:
+        print(f"{character}")
+        if len(character.reminderTokens):
+            print("Reminder Tokens:")
+            for token in character.reminderTokens:
+                print(f"{token}")
+        print("")
 
     tests = [player for player in activePlayers if player.role == Role.WASHERWOMAN]
     for test in tests:
