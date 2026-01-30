@@ -1,4 +1,4 @@
-from random import shuffle, sample
+from random import shuffle, sample, randint
 
 from player_class import Player
 from enums.roles import Role, Alignment, Status
@@ -143,6 +143,11 @@ def isDrunkOrPoisoned(player: Player) -> bool:
         if status == Status.IS_POISONED or status == Status.IS_DRUNK:
             return True
     return False
+
+
+def isNeighbor(numberOfPlayers: int, seat1: int, seat2: int) -> bool:
+    diff = abs(seat1 - seat2)
+    return diff == 1 or diff == numberOfPlayers - 1
 
 
 def evilLearnsEachOther(day: int, activePlayers: list[Player]) -> None:
@@ -372,12 +377,37 @@ def investigatorActs(
     learnedPlayers = [correctPlayer, wrongPlayer]
     shuffle(learnedPlayers)
 
-    investigator.learn(day, investigator.character, f"ROLE {correctPlayer.role.name} IS IN PLAY")
+    investigator.learn(
+        day, investigator.character, f"ROLE {correctPlayer.role.name} IS IN PLAY"
+    )
     investigator.learn(
         day,
         investigator.character,
         f"PLAYER {learnedPlayers[0].character.name} OR PLAYER {learnedPlayers[1].character.name} ARE ROLE {correctPlayer.role.name}",
     )
 
-    for info in investigator.knowledgeBank:
-        print(info)
+
+def chefActs(chef: Player, day: int, activePlayers: list[Player]) -> None:
+    # TODO: Make Recluse logic smarter
+    evilSeats = [
+        player.seat
+        for player in activePlayers
+        if player.alignment == Alignment.EVIL or player.role == Role.RECLUSE
+    ]
+    numberOfPlayers = len(activePlayers)
+
+    count = 0
+    for seat1 in evilSeats:
+        for seat2 in [seat for seat in evilSeats if seat is not seat1]:
+            if isNeighbor(numberOfPlayers, seat1, seat2):
+                count += 1
+    count = count >> 1
+
+    # TODO: Add smarter drunk logic
+    if isDrunkOrPoisoned(chef):
+        newVal = randint(0, 2)
+        while newVal == count:
+            newVal = randint(0, 2)
+        count = newVal
+
+    chef.learn(day, chef.character, f"THERE ARE {count} PAIRS OF EVIL PLAYERS")

@@ -24,63 +24,6 @@ def main() -> None:
     # Minions Learn Demon
     # Demon Learns Minions
     evilLearnsEachOther(day, activePlayers)
-    # evilPlayers = [
-    #     player for player in activePlayers if player.alignment == Alignment.EVIL
-    # ]
-    # goodPlayers = [
-    #     player for player in activePlayers if player.alignment == Alignment.GOOD
-    # ]
-
-    # for evilPlayer in evilPlayers:
-    #     for player in goodPlayers:
-    #         evilPlayer.learn(
-    #             day,
-    #             Character.STORYTELLER,
-    #             f"PLAYER {player.character.name} ALIGNMENT IS {Alignment.GOOD.name}",
-    #         )
-    #     otherEvils = [
-    #         evil for evil in evilPlayers if evil.character != evilPlayer.character
-    #     ]
-
-    #     for otherEvil in otherEvils:
-    #         name = otherEvil.character.name
-    #         evilPlayer.learn(
-    #             day,
-    #             Character.STORYTELLER,
-    #             f"PLAYER {name} ALIGNMENT IS {Alignment.EVIL.name}",
-    #         )
-    #         if isMinion(otherEvil.role):
-    #             evilPlayer.learn(
-    #                 day,
-    #                 Character.STORYTELLER,
-    #                 f"PLAYER {name} CATEGORY IS MINION",
-    #             )
-    #         if isDemon(otherEvil.role):
-    #             evilPlayer.learn(
-    #                 day,
-    #                 Character.STORYTELLER,
-    #                 f"PLAYER {name} CATEGORY IS DEMON",
-    #             )
-
-    # Demon Learns Bluffs
-    # demons = [player for player in activePlayers if isDemon(player.role)]
-    # for demon in demons:
-    #     inPlayTownRoles = [
-    #         player.role for player in activePlayers if isVillager(player.role)
-    #     ]
-
-    #     notInPlayTownRoles = [
-    #         role
-    #         for role in Role
-    #         if role not in inPlayTownRoles
-    #         and isVillager(role)
-    #         and role is not Role.DRUNK
-    #     ]
-
-    #     # TODO: Smarter Bluff Selection Logic
-    #     bluffs = sample(notInPlayTownRoles, 3)
-    #     for bluff in bluffs:
-    #         demon.learn(day, Character.STORYTELLER, f"ROLE {bluff.name} IS NOT IN PLAY")
     demonLearnsBluffs(day, activePlayers)
 
     # Poisoner Posions a Character
@@ -111,7 +54,14 @@ def main() -> None:
         investigatorActs(investigator, day, activePlayers)
 
     # Chef Learns
+    chefs = [player for player in activePlayers if player.role == Role.CHEF]
+    for chef in chefs:
+        chefActs(chef, day, activePlayers)
+
     # Empath Learns
+    # empaths = [player for player in activePlayers if player.role == Role.EMPATH]
+    # for empath in empaths:
+    #     empathActs(empath, day, activePlayers)
     # Fortune Teller Chooses Two Players and Learns
     # Butler Chooses a Player
 
@@ -124,10 +74,11 @@ def main() -> None:
     #             print(f"{token}")
     #     print("")
 
-    # for player in activePlayers:
-    #     print(f"{player.character.name}: {player.role.name}")
-    #     print(player.reminderTokens)
-    #     print(player.knowledgeBank)
+    for player in [player for player in activePlayers]:
+        print(f"{player.character.name}: {player.role.name}")
+        print(player.reminderTokens)
+        print(player.knowledgeBank)
+        print("")
     ## Start Game
 
 
