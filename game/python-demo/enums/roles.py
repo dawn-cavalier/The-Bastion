@@ -44,3 +44,4 @@ class Status(IntEnum):
     IS_POISONED = 1
     IS_RED_HERRING = 2
     NO_ABILITY = 3
+    IS_MASTER = 4

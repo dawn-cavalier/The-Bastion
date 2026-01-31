@@ -480,3 +480,9 @@ def fortuneTellerActs(
         fortuneTeller.character,
         f"PLAYER {targets[0].character.name} AND PLAYER {targets[1].character.name} IS NOT THE DEMON",
     )
+
+
+def bulterActs(bulter: Player, day: int, activePlayers: list[Player]) -> None:
+    # TODO: Add targeting logic
+    master = sample([player for player in activePlayers if player is not bulter], 1)[0]
+    master.reminderTokens.append((Role.BUTLER, Status.IS_MASTER))

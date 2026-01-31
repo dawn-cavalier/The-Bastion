@@ -67,7 +67,11 @@ def main() -> None:
     fortuneTellers = [player for player in activePlayers if player.role == Role.FORTUNE_TELLER]
     for fortuneTeller in fortuneTellers:
         fortuneTellerActs(fortuneTeller, day, activePlayers)
+
     # Butler Chooses a Player
+    butlers = [player for player in activePlayers if player.role == Role.BUTLER]
+    for bulter in butlers:
+        bulterActs(bulter, day, activePlayers)
 
     # Debug printing
     # for character in activePlayers:
