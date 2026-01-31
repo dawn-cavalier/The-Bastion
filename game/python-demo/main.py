@@ -21,6 +21,8 @@ def main() -> None:
     ## Night 1
     day = 1
     processNight(day, activePlayers)
+    day += 1
+    processNight(day, activePlayers)
 
     # Debug printing
     for player in [player for player in activePlayers]:

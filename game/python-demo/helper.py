@@ -152,6 +152,14 @@ def isNeighbor(numberOfPlayers: int, seat1: int, seat2: int) -> bool:
 
 def processNight(day: int, activePlayers: list[Player]) -> None:
     # Cleanup reminder tokens
+    tokensToRemove = [
+        (Role.BUTLER, Status.IS_MASTER),
+        (Role.POISONER, Status.IS_POISONED),
+    ]
+    for token in tokensToRemove:
+        for player in activePlayers:
+            if token in player.reminderTokens:
+                player.reminderTokens.remove(token)
 
     if day == 1:
         nightOneOrder(activePlayers)
@@ -227,7 +235,7 @@ def nightOrder(day: int, activePlayers: list[Player]) -> None:
 
     spies = [player for player in activePlayers if player.role == Role.SPY]
     for spy in spies:
-        spyActs(spy, activePlayers)
+        spyActs(spy, day, activePlayers)
 
     # Scarlet Woman acts
 
