@@ -392,22 +392,53 @@ def chefActs(chef: Player, day: int, activePlayers: list[Player]) -> None:
     evilSeats = [
         player.seat
         for player in activePlayers
-        if player.alignment == Alignment.EVIL or player.role == Role.RECLUSE
+        if (player.alignment is Alignment.EVIL or player.role is Role.RECLUSE)
+        and player.role is not Role.SPY
     ]
     numberOfPlayers = len(activePlayers)
 
-    count = 0
+    chefNumber = 0
     for seat1 in evilSeats:
         for seat2 in [seat for seat in evilSeats if seat is not seat1]:
             if isNeighbor(numberOfPlayers, seat1, seat2):
-                count += 1
-    count = count >> 1
+                chefNumber += 1
+    chefNumber = chefNumber >> 1
 
     # TODO: Add smarter drunk logic
     if isDrunkOrPoisoned(chef):
         newVal = randint(0, 2)
-        while newVal == count:
+        while newVal == chefNumber:
             newVal = randint(0, 2)
-        count = newVal
+        chefNumber = newVal
 
-    chef.learn(day, chef.character, f"THERE ARE {count} PAIRS OF EVIL PLAYERS")
+    chef.learn(day, chef.character, f"THERE ARE {chefNumber} PAIRS OF EVIL PLAYERS")
+
+
+def empathActs(empath: Player, day: int, activePlayers: list[Player]) -> None:
+    neighbors = [
+        player
+        for player in activePlayers
+        if isNeighbor(len(activePlayers), empath.seat, player.seat)
+    ]
+
+    empathNumber = len(
+        [
+            player
+            for player in neighbors
+            if (player.alignment is Alignment.EVIL or player.role is Role.RECLUSE)
+            and player.role is not Role.SPY
+        ]
+    )
+
+    # TODO: Make consistent across nights
+    if isDrunkOrPoisoned(empath):
+        newVal = randint(0, 2)
+        while newVal == empathNumber:
+            newVal = randint(0, 2)
+        empathNumber = newVal
+
+    empath.learn(
+        day,
+        empath.character,
+        f"BETWEEN PLAYER {neighbors[0].character.name} AND PLAYER {neighbors[1].character.name} THERE ARE {empathNumber} EVIL PLAYERS",
+    )

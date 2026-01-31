@@ -59,9 +59,9 @@ def main() -> None:
         chefActs(chef, day, activePlayers)
 
     # Empath Learns
-    # empaths = [player for player in activePlayers if player.role == Role.EMPATH]
-    # for empath in empaths:
-    #     empathActs(empath, day, activePlayers)
+    empaths = [player for player in activePlayers if player.role == Role.EMPATH]
+    for empath in empaths:
+        empathActs(empath, day, activePlayers)
     # Fortune Teller Chooses Two Players and Learns
     # Butler Chooses a Player
 
