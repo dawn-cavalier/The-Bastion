@@ -442,3 +442,41 @@ def empathActs(empath: Player, day: int, activePlayers: list[Player]) -> None:
         empath.character,
         f"BETWEEN PLAYER {neighbors[0].character.name} AND PLAYER {neighbors[1].character.name} THERE ARE {empathNumber} EVIL PLAYERS",
     )
+
+
+def fortuneTellerActs(
+    fortuneTeller: Player, day: int, activePlayers: list[Player]
+) -> None:
+    # TODO: Add Targeting
+    targets = sample(activePlayers, 2)
+    demons: list[Player]
+    # TODO: Add smarter drunk logic
+    if isDrunkOrPoisoned(fortuneTeller):
+        demons = [
+            player
+            for player in targets
+            if (Role.FORTUNE_TELLER, Status.IS_RED_HERRING) in player.reminderTokens
+            or player is Role.RECLUSE
+        ]
+    else:
+        demons = [
+            player
+            for player in targets
+            if isDemon(player.role)
+            or (Role.FORTUNE_TELLER, Status.IS_RED_HERRING) in player.reminderTokens
+            or player is Role.RECLUSE
+        ]
+
+    if len(demons):
+        fortuneTeller.learn(
+            day,
+            fortuneTeller.character,
+            f"PLAYER {targets[0].character.name} OR PLAYER {targets[1].character.name} IS THE DEMON",
+        )
+        return
+
+    fortuneTeller.learn(
+        day,
+        fortuneTeller.character,
+        f"PLAYER {targets[0].character.name} AND PLAYER {targets[1].character.name} IS NOT THE DEMON",
+    )

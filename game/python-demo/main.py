@@ -62,7 +62,11 @@ def main() -> None:
     empaths = [player for player in activePlayers if player.role == Role.EMPATH]
     for empath in empaths:
         empathActs(empath, day, activePlayers)
+
     # Fortune Teller Chooses Two Players and Learns
+    fortuneTellers = [player for player in activePlayers if player.role == Role.FORTUNE_TELLER]
+    for fortuneTeller in fortuneTellers:
+        fortuneTellerActs(fortuneTeller, day, activePlayers)
     # Butler Chooses a Player
 
     # Debug printing
@@ -76,7 +80,9 @@ def main() -> None:
 
     for player in [player for player in activePlayers]:
         print(f"{player.character.name}: {player.role.name}")
+        print("Reminder Tokens:")
         print(player.reminderTokens)
+        print("Knowledge Bank:")
         print(player.knowledgeBank)
         print("")
     ## Start Game
