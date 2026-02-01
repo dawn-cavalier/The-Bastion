@@ -1,10 +1,11 @@
-from enums.roles import Role, Alignment, Status
-from enums.characters import Character
+from enums.roles import *
+from enums.characters import *
 
 
 class Player:
     role: Role
     character: Character
+    isAlive: bool
     seat: int
     presence: float
     trust: list[float]
@@ -21,6 +22,7 @@ class Player:
             f"Character: {self.character.name}\n"
             f"Seat: {self.seat}\n"
             f"Role: {self.role.name}\n"
+            f"isAlive: {self.isAlive}\n"
             f"Alignment: {self.alignment.name}\n"
             f"Presence: {self.presence}"
         )
@@ -29,6 +31,7 @@ class Player:
         self.role = Role.NONE
         self.presence = 0.5
         self.seat = -1
+        self.isAlive = True
         self.trust = [0.5 for _ in Character]
         self.reminderTokens = []
         self.alignment = Alignment.UNASSIGNED

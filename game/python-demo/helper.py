@@ -175,65 +175,99 @@ def nightOneOrder(activePlayers: list[Player]) -> None:
     demonLearnsBluffs(day, activePlayers)
 
     # Poisoner Posions a Character
-    posioners = [player for player in activePlayers if player.role == Role.POISONER]
+    posioners = [
+        player
+        for player in activePlayers
+        if player.role == Role.POISONE and player.isAliveR
+    ]
     for posioner in posioners:
         posionerActs(posioner, activePlayers)
 
     # Spy Learns the Grimoire
-    spies = [player for player in activePlayers if player.role == Role.SPY]
+    spies = [
+        player for player in activePlayers if player.role == Role.SPY and player.isAlive
+    ]
     for player in spies:
         spyActs(player, day, activePlayers)
 
     # Washerwoman Learns
     washerwomen = [
-        player for player in activePlayers if player.role == Role.WASHERWOMAN
+        player
+        for player in activePlayers
+        if player.role == Role.WASHERWOMAN and player.isAlive
     ]
     for washerwoman in washerwomen:
         washerwomanActs(washerwoman, day, activePlayers)
 
     # Librarian Learns
-    librarians = [player for player in activePlayers if player.role == Role.LIBRARIAN]
+    librarians = [
+        player
+        for player in activePlayers
+        if player.role == Role.LIBRARIAN and player.isAlive
+    ]
     for librarian in librarians:
         librarianActs(librarian, day, activePlayers)
 
     # Investigator Learns
     investigators = [
-        player for player in activePlayers if player.role == Role.INVESTIGATOR
+        player
+        for player in activePlayers
+        if player.role == Role.INVESTIGATOR and player.isAlive
     ]
     for investigator in investigators:
         investigatorActs(investigator, day, activePlayers)
 
     # Chef Learns
-    chefs = [player for player in activePlayers if player.role == Role.CHEF]
+    chefs = [
+        player
+        for player in activePlayers
+        if player.role == Role.CHEF and player.isAlive
+    ]
     for chef in chefs:
         chefActs(chef, day, activePlayers)
 
     # Empath Learns
-    empaths = [player for player in activePlayers if player.role == Role.EMPATH]
+    empaths = [
+        player
+        for player in activePlayers
+        if player.role == Role.EMPATH and player.isAlive
+    ]
     for empath in empaths:
         empathActs(empath, day, activePlayers)
 
     # Fortune Teller Chooses Two Players and Learns
     fortuneTellers = [
-        player for player in activePlayers if player.role == Role.FORTUNE_TELLER
+        player
+        for player in activePlayers
+        if player.role == Role.FORTUNE_TELLER and player.isAlive
     ]
     for fortuneTeller in fortuneTellers:
         fortuneTellerActs(fortuneTeller, day, activePlayers)
 
     # Butler Chooses a Player
-    butlers = [player for player in activePlayers if player.role == Role.BUTLER]
+    butlers = [
+        player
+        for player in activePlayers
+        if player.role == Role.BUTLER and player.isAlive
+    ]
     for bulter in butlers:
         bulterActs(bulter, day, activePlayers)
 
 
 def nightOrder(day: int, activePlayers: list[Player]) -> None:
-    posioners = [player for player in activePlayers if player.role == Role.POISONER]
+    posioners = [
+        player
+        for player in activePlayers
+        if player.role == Role.POISONER and player.isAlive
+    ]
     for posioner in posioners:
         posionerActs(posioner, activePlayers)
 
     # Monk Acts
 
-    spies = [player for player in activePlayers if player.role == Role.SPY]
+    spies = [
+        player for player in activePlayers if player.role == Role.SPY and player.isAlive
+    ]
     for spy in spies:
         spyActs(spy, day, activePlayers)
 
@@ -246,19 +280,29 @@ def nightOrder(day: int, activePlayers: list[Player]) -> None:
     # Undertaker Acts
 
     # Empath Learns
-    empaths = [player for player in activePlayers if player.role == Role.EMPATH]
+    empaths = [
+        player
+        for player in activePlayers
+        if player.role == Role.EMPATH and player.isAlive
+    ]
     for empath in empaths:
         empathActs(empath, day, activePlayers)
 
     # Fortune Teller Chooses Two Players and Learns
     fortuneTellers = [
-        player for player in activePlayers if player.role == Role.FORTUNE_TELLER
+        player
+        for player in activePlayers
+        if player.role == Role.FORTUNE_TELLER and player.isAlive
     ]
     for fortuneTeller in fortuneTellers:
         fortuneTellerActs(fortuneTeller, day, activePlayers)
 
     # Butler Chooses a Player
-    butlers = [player for player in activePlayers if player.role == Role.BUTLER]
+    butlers = [
+        player
+        for player in activePlayers
+        if player.role == Role.BUTLER and player.isAlive
+    ]
     for bulter in butlers:
         bulterActs(bulter, day, activePlayers)
 
@@ -305,21 +349,17 @@ def evilLearnsEachOther(day: int, activePlayers: list[Player]) -> None:
 
 def demonLearnsBluffs(day: int, activePlayers: list[Player]) -> None:
     demons = [player for player in activePlayers if isDemon(player.role)]
+    inPlayTownRoles = [
+        player.role for player in activePlayers if isVillager(player.role)
+    ]
+    notInPlayTownRoles = [
+        role
+        for role in Role
+        if role not in inPlayTownRoles and isVillager(role) and role is not Role.DRUNK
+    ]
+    # TODO: Smarter Bluff Selection Logic
+    bluffs = sample(notInPlayTownRoles, 3)
     for demon in demons:
-        inPlayTownRoles = [
-            player.role for player in activePlayers if isVillager(player.role)
-        ]
-
-        notInPlayTownRoles = [
-            role
-            for role in Role
-            if role not in inPlayTownRoles
-            and isVillager(role)
-            and role is not Role.DRUNK
-        ]
-
-        # TODO: Smarter Bluff Selection Logic
-        bluffs = sample(notInPlayTownRoles, 3)
         for bluff in bluffs:
             demon.learn(day, Character.STORYTELLER, f"ROLE {bluff.name} IS NOT IN PLAY")
 

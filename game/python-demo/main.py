@@ -18,11 +18,24 @@ def main() -> None:
     activePlayers = sample([player for player in allPlayers], 10)
     activePlayers = buildGame(activePlayers)
 
-    ## Night 1
+    ## Nighttime
     day = 1
     processNight(day, activePlayers)
-    day += 1
-    processNight(day, activePlayers)
+
+    ## Daytime
+    # Announcements
+    # - Who died in the night?
+    # TODO: Add this as part of demon action
+    # TODO: Skip this on the first day
+    # Small Meetings
+    # - 2-3 people exchange information
+    # Large Meeting
+    # - Everyone exchanges information
+    # Nominations
+    # - Nominations and information exchange
+    # - Voting
+    # Execution
+    
 
     # Debug printing
     for player in [player for player in activePlayers]:
