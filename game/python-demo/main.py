@@ -1,7 +1,6 @@
-from random import shuffle, sample
+from random import sample
 
 from player_class import Player
-from enums.roles import Role, Alignment, Status
 from enums.characters import Character
 from helper import *
 

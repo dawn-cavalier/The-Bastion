@@ -178,7 +178,7 @@ def nightOneOrder(activePlayers: list[Player]) -> None:
     posioners = [
         player
         for player in activePlayers
-        if player.role == Role.POISONE and player.isAliveR
+        if player.role == Role.POISONER and player.isAlive
     ]
     for posioner in posioners:
         posionerActs(posioner, activePlayers)
