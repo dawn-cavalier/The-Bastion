@@ -6,10 +6,7 @@ class InfoType(IntEnum):
     COUNT_MINIONS = 2
     COUNT_DEMONS = 3
     COUNT_PLAYERS = 4
-    INPLAY_TOWNSFOLK = 5
-    INPLAY_OUTSIDERS = 6
-    INPLAY_MINIONS = 7
-    INPLAY_DEMONS = 8
+    INPLAY_ROLE = 5
     
     IS_ROLE = 10
 

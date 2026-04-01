@@ -32,13 +32,8 @@ class Knowledge:
                 return f"On day {self.day}, learned Seat {self.target} {self.infoType.name} {self.information.name} from the Storyteller."
             return f"On day {self.day}, learned Seat {self.target}  {self.infoType.name} {self.information.name} from Seat {self.source}."
 
-        if self.infoType in (
-            InfoType.INPLAY_TOWNSFOLK,
-            InfoType.INPLAY_OUTSIDERS,
-            InfoType.INPLAY_MINIONS,
-            InfoType.INPLAY_DEMONS,
-        ):
-            return f"On day {self.day}, learned {self.infoType.name} {self.information}"
+        if self.infoType in (InfoType.INPLAY_ROLE,):
+            return f"On day {self.day}, learned {self.information.name} is in play."
 
         if self.infoType in (
             InfoType.COUNT_TOWNSFOLK,
@@ -84,54 +79,52 @@ class Player:
             Knowledge(0, None, None, InfoType.COUNT_OUTSIDERS, (countOutsider)),
             Knowledge(0, None, None, InfoType.COUNT_MINIONS, (countMinion)),
             Knowledge(0, None, None, InfoType.COUNT_DEMONS, (countDemon)),
-            Knowledge(0, None, None, InfoType.INPLAY_TOWNSFOLK, ()),
-            Knowledge(0, None, None, InfoType.INPLAY_OUTSIDERS, ()),
-            Knowledge(0, None, None, InfoType.INPLAY_MINIONS, ()),
-            Knowledge(0, None, None, InfoType.INPLAY_DEMONS, ()),
         ]
 
         # Add Known Rules
-        demonCount = len([_ for _ in inPlayRoles if isDemon(_)])
-        if countDemon == demonCount:
-            demonInfo = [
-                knowledge
-                for knowledge in self.knowledgeBank
-                if knowledge.infoType is InfoType.INPLAY_DEMONS
-            ][0]
-            demonInfo.information = (Role.IMP,)
+        scriptDemons = [_ for _ in inPlayRoles if isDemon(_)]
+        if len(scriptDemons) == 1:
+            self.knowledgeBank.append(
+                Knowledge(0, None, None, InfoType.INPLAY_ROLE, scriptDemons[0])
+            )
 
         # Build Role Grid
-        self.buildRoleGrid(inPlayRoles=inPlayRoles)
+        self.buildRoleGrid(inScriptRoles=inPlayRoles)
 
     def __str__(self) -> str:
         return f"Seat: {self.seat}\nRole: {self.role.name}\n"
 
     def __isRole__(self, knowledge: Knowledge):
-        target = knowledge.target
-        information: Role = knowledge.information
-        print(knowledge)
-        pass
+        source: int | None = knowledge.source
+        targetSeat: int = knowledge.target
+        role: Role = knowledge.information
 
-    def buildRoleGrid(self, inPlayRoles: list[Role]):
+        # Storyteller information
+        if source is None:
+            self.roleGrid[targetSeat][role] += 1000
+
+    def buildRoleGrid(self, inScriptRoles: list[Role]):
         playerCount: int = 0
         townsfolkCount: int = 0
         outsiderCount: int = 0
         minionCount: int = 0
         demonCount: int = 0
-        inPlayTownsfolk: list[Role] = None
-        inPlayOutsider: list[Role] = None
-        inPlayMinion: list[Role] = None
-        inPlayDemon: list[Role] = None
+        inPlayRoles: list[Role] = []
 
-        townsfolkRoles = [role for role in inPlayRoles if isTownsfolk(role)]
-        outsiderRoles = [role for role in inPlayRoles if isOutsider(role)]
-        minionRoles = [role for role in inPlayRoles if isMinion(role)]
-        demonRoles = [role for role in inPlayRoles if isDemon(role)]
+        townsfolkRoles = [role for role in inScriptRoles if isTownsfolk(role)]
+        outsiderRoles = [role for role in inScriptRoles if isOutsider(role)]
+        minionRoles = [role for role in inScriptRoles if isMinion(role)]
+        demonRoles = [role for role in inScriptRoles if isDemon(role)]
+
+        playerCount = [
+            knowledge.information
+            for knowledge in self.knowledgeBank
+            if knowledge.infoType is InfoType.COUNT_PLAYERS
+        ][0]
+        self.roleGrid = [[0.0 for role in inScriptRoles] for seat in range(playerCount)]
 
         for knowledge in self.knowledgeBank:
             match knowledge.infoType:
-                case InfoType.COUNT_PLAYERS:
-                    playerCount = knowledge.information
                 case InfoType.COUNT_TOWNSFOLK:
                     townsfolkCount = knowledge.information
                 case InfoType.COUNT_OUTSIDERS:
@@ -140,65 +133,23 @@ class Player:
                     minionCount = knowledge.information
                 case InfoType.COUNT_DEMONS:
                     demonCount = knowledge.information
-                case InfoType.INPLAY_TOWNSFOLK:
-                    inPlayTownsfolk = knowledge.information
-                case InfoType.INPLAY_OUTSIDERS:
-                    inPlayOutsider = knowledge.information
-                case InfoType.INPLAY_MINIONS:
-                    inPlayMinion = knowledge.information
-                case InfoType.INPLAY_DEMONS:
-                    inPlayDemon = knowledge.information
+                case InfoType.INPLAY_ROLE:
+                    if knowledge.information not in inPlayRoles:
+                        inPlayRoles.append(knowledge.information)
                 case InfoType.IS_ROLE:
                     self.__isRole__(knowledge=knowledge)
 
-        self.roleGrid = [[0.0 for role in inPlayRoles] for seat in range(playerCount)]
-        validPlayers = [seat for seat in range(playerCount)]
+        print(inPlayRoles)
 
-        for townsfolk in townsfolkRoles:
-            index = inPlayRoles.index(townsfolk)
-            scalar = 0.0
-            if townsfolk in inPlayTownsfolk:
-                scalar += 1
-
-            for seat in validPlayers:
-                self.roleGrid[seat][index] += scalar
-
-        for outsider in outsiderRoles:
-            index = inPlayRoles.index(outsider)
-            scalar = 0.0
-            if outsider in inPlayOutsider:
-                scalar += 1
-
-            for seat in validPlayers:
-                self.roleGrid[seat][index] += scalar
-
-        for minion in minionRoles:
-            index = inPlayRoles.index(minion)
-            scalar = 0.0
-            if minion in inPlayMinion:
-                scalar += 1
-
-            for seat in validPlayers:
-                self.roleGrid[seat][index] += scalar
-
-        for demon in demonRoles:
-            index = inPlayRoles.index(demon)
-            scalar = 0.0
-            if demon in inPlayDemon:
-                scalar += 1
-
-            for seat in validPlayers:
-                self.roleGrid[seat][index] += scalar
-
-    def learn(self, inPlayRoles: list[Role], knowledge: Knowledge):
-        self.buildRoleGrid(inPlayRoles=inPlayRoles)
+    def learn(self, inScriptRoles: list[Role], knowledge: Knowledge):
+        self.buildRoleGrid(inScriptRoles=inScriptRoles)
         pass
 
 
 def main() -> None:
     r.seed(a=0, version=2)
     playerCount = 7
-    inPlayRoles = [_ for _ in Role if _ >= Role.WASHERWOMAN]
+    inScriptRoles = [_ for _ in Role if _ >= Role.WASHERWOMAN]
     roles, drunkRole = getRoles(playerCount)
     players = [
         Player(
@@ -210,7 +161,7 @@ def main() -> None:
         for seat in list(range(playerCount))
     ]
 
-    learnStartingInfo(inPlayRoles=inPlayRoles, players=players)
+    learnStartingInfo(inScriptRoles=inScriptRoles, players=players)
 
     # for role in inPlayRoles:
     #     sum = 0.0
@@ -223,17 +174,26 @@ def main() -> None:
     #     print(knowledge)
 
 
-def learnStartingInfo(inPlayRoles: list[Role], players: list[Player]) -> None:
+def learnStartingInfo(inScriptRoles: list[Role], players: list[Player]) -> None:
     for player in players:
-        learnedInfo = Knowledge(
-            day=0,
-            source=None,
-            target=player.seat,
-            infoType=InfoType.IS_ROLE,
-            information=player.role,
-        )
-        player.knowledgeBank.append(learnedInfo)
-        player.learn(inPlayRoles=inPlayRoles, knowledge=learnedInfo)
+        learnedInfo = [
+            Knowledge(
+                day=0,
+                source=None,
+                target=player.seat,
+                infoType=InfoType.IS_ROLE,
+                information=player.role,
+            ),
+            Knowledge(
+                day=0,
+                source=None,
+                target=None,
+                infoType=InfoType.INPLAY_ROLE,
+                information=player.role,
+            ),
+        ]
+        player.knowledgeBank += learnedInfo
+        player.learn(inScriptRoles=inScriptRoles, knowledge=learnedInfo)
 
 
 def getRoles(playerCount: int) -> tuple[list, Role]:
