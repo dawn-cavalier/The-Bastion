@@ -39,14 +39,17 @@ class Knowledge:
             InfoType.INPLAY_DEMONS,
         ):
             return f"On day {self.day}, learned {self.infoType.name} {self.information}"
-        
+
         if self.infoType in (
             InfoType.COUNT_TOWNSFOLK,
             InfoType.COUNT_OUTSIDERS,
             InfoType.COUNT_MINIONS,
-            InfoType.COUNT_DEMONS
+            InfoType.COUNT_DEMONS,
+            InfoType.COUNT_PLAYERS,
         ):
-            return f"On day {self.day}, learned {self.infoType.name} is {self.information}"
+            return (
+                f"On day {self.day}, learned {self.infoType.name} is {self.information}"
+            )
         return f"UNHANDLED {self.infoType.name}"
 
 
@@ -63,6 +66,8 @@ class Player:
         self.role = role
         self.reminderTokens = []
         self.knowledgeBank = []
+        self.roleGrid = []
+
         if isDrunk:
             self.reminderTokens.append(Status.IS_DRUNK)
 
@@ -70,23 +75,24 @@ class Player:
         inPlayRoles = [_ for _ in Role if _ >= Role.WASHERWOMAN]
 
         # Innate Assumptions
-        presentTownsfolk, presentOutsider, presentMinion, presentDemon = getTypeCounts(
+        countTownsfolk, countOutsider, countMinion, countDemon = getTypeCounts(
             playerCount
         )
-
-        demonCount = len([_ for _ in inPlayRoles if isDemon(_)])
-
         self.knowledgeBank += [
-            Knowledge(0, None, None, InfoType.COUNT_TOWNSFOLK, (presentTownsfolk)),
-            Knowledge(0, None, None, InfoType.COUNT_OUTSIDERS, (presentOutsider)),
-            Knowledge(0, None, None, InfoType.COUNT_MINIONS, (presentMinion)),
-            Knowledge(0, None, None, InfoType.COUNT_DEMONS, (presentDemon)),
+            Knowledge(0, None, None, InfoType.COUNT_PLAYERS, (playerCount)),
+            Knowledge(0, None, None, InfoType.COUNT_TOWNSFOLK, (countTownsfolk)),
+            Knowledge(0, None, None, InfoType.COUNT_OUTSIDERS, (countOutsider)),
+            Knowledge(0, None, None, InfoType.COUNT_MINIONS, (countMinion)),
+            Knowledge(0, None, None, InfoType.COUNT_DEMONS, (countDemon)),
             Knowledge(0, None, None, InfoType.INPLAY_TOWNSFOLK, ()),
             Knowledge(0, None, None, InfoType.INPLAY_OUTSIDERS, ()),
             Knowledge(0, None, None, InfoType.INPLAY_MINIONS, ()),
-            Knowledge(0, None, None, InfoType.INPLAY_DEMONS, ())
+            Knowledge(0, None, None, InfoType.INPLAY_DEMONS, ()),
         ]
-        if presentDemon == demonCount:
+
+        # Add Known Rules
+        demonCount = len([_ for _ in inPlayRoles if isDemon(_)])
+        if countDemon == demonCount:
             demonInfo = [
                 knowledge
                 for knowledge in self.knowledgeBank
@@ -94,92 +100,99 @@ class Player:
             ][0]
             demonInfo.information = (Role.IMP,)
 
-        for knowledge in self.knowledgeBank:
-            print(knowledge)
-
-        self.roleGrid = [[0.0 for _ in inPlayRoles] for seat in range(playerCount)]
-
-        self.__buildRoleGrid__(playerCount=playerCount, inPlayRoles=inPlayRoles)
+        # Build Role Grid
+        self.buildRoleGrid(inPlayRoles=inPlayRoles)
 
     def __str__(self) -> str:
         return f"Seat: {self.seat}\nRole: {self.role.name}\n"
 
-    def __buildRoleGrid__(self, playerCount: int, inPlayRoles: list[Role]) -> None:
-        presentTownsfolk, presentOutsider, presentMinion, presentDemon = getTypeCounts(
-            playerCount
-        )
+    def __isRole__(self, knowledge: Knowledge):
+        target = knowledge.target
+        information: Role = knowledge.information
+        print(knowledge)
+        pass
 
-        townsfolkCount = len([_ for _ in inPlayRoles if isTownsfolk(_)])
-        outsiderCount = len([_ for _ in inPlayRoles if isOutsider(_)])
-        minionCount = len([_ for _ in inPlayRoles if isMinion(_)])
-        demonCount = len([_ for _ in inPlayRoles if isDemon(_)])
+    def buildRoleGrid(self, inPlayRoles: list[Role]):
+        playerCount: int = 0
+        townsfolkCount: int = 0
+        outsiderCount: int = 0
+        minionCount: int = 0
+        demonCount: int = 0
+        inPlayTownsfolk: list[Role] = None
+        inPlayOutsider: list[Role] = None
+        inPlayMinion: list[Role] = None
+        inPlayDemon: list[Role] = None
 
-        
+        townsfolkRoles = [role for role in inPlayRoles if isTownsfolk(role)]
+        outsiderRoles = [role for role in inPlayRoles if isOutsider(role)]
+        minionRoles = [role for role in inPlayRoles if isMinion(role)]
+        demonRoles = [role for role in inPlayRoles if isDemon(role)]
 
-        # baronChance = presentMinion / minionCount
-        # for playerSeat in range(playerCount):
-        #     for playerRole in [_ for _ in inPlayRoles]:
-        #         roleChance = 0.0
-        #         if isTownsfolk(playerRole):
-        #             # No Baron, No Drunk
-        #             roleChance += (
-        #                 (1 - baronChance)
-        #                 * (1 - (presentOutsider / outsiderCount))
-        #                 * (presentTownsfolk / townsfolkCount)
-        #             )
-        #             # Baron, No Drunk
-        #             roleChance += (
-        #                 (baronChance)
-        #                 * (1 - ((presentOutsider + 2) / outsiderCount))
-        #                 * ((presentTownsfolk - 2) / townsfolkCount)
-        #             )
-        #             # Baron, Drunk
-        #             roleChance += (
-        #                 (baronChance)
-        #                 * ((presentOutsider + 2) / outsiderCount)
-        #                 * ((presentTownsfolk - 2) / townsfolkCount)
-        #             )
-        #             # No Baron, Drunk
-        #             roleChance += (
-        #                 (1 - baronChance)
-        #                 * (presentOutsider / outsiderCount)
-        #                 * ((presentTownsfolk) / townsfolkCount)
-        #             )
+        for knowledge in self.knowledgeBank:
+            match knowledge.infoType:
+                case InfoType.COUNT_PLAYERS:
+                    playerCount = knowledge.information
+                case InfoType.COUNT_TOWNSFOLK:
+                    townsfolkCount = knowledge.information
+                case InfoType.COUNT_OUTSIDERS:
+                    outsiderCount = knowledge.information
+                case InfoType.COUNT_MINIONS:
+                    minionCount = knowledge.information
+                case InfoType.COUNT_DEMONS:
+                    demonCount = knowledge.information
+                case InfoType.INPLAY_TOWNSFOLK:
+                    inPlayTownsfolk = knowledge.information
+                case InfoType.INPLAY_OUTSIDERS:
+                    inPlayOutsider = knowledge.information
+                case InfoType.INPLAY_MINIONS:
+                    inPlayMinion = knowledge.information
+                case InfoType.INPLAY_DEMONS:
+                    inPlayDemon = knowledge.information
+                case InfoType.IS_ROLE:
+                    self.__isRole__(knowledge=knowledge)
 
-        #         elif isOutsider(playerRole):
-        #             # No Baron
-        #             roleChance += (1 - baronChance) * (presentOutsider / outsiderCount)
-        #             # Baron
-        #             roleChance += (baronChance) * (
-        #                 (presentOutsider + 2) / outsiderCount
-        #             )
+        self.roleGrid = [[0.0 for role in inPlayRoles] for seat in range(playerCount)]
+        validPlayers = [seat for seat in range(playerCount)]
 
-        #         elif isMinion(playerRole):
-        #             roleChance += presentMinion / minionCount
+        for townsfolk in townsfolkRoles:
+            index = inPlayRoles.index(townsfolk)
+            scalar = 0.0
+            if townsfolk in inPlayTownsfolk:
+                scalar += 1
 
-        #         elif isDemon(playerRole):
-        #             roleChance += presentDemon / demonCount
+            for seat in validPlayers:
+                self.roleGrid[seat][index] += scalar
 
-        #         else:
-        #             raise Exception("Invalid Role")
+        for outsider in outsiderRoles:
+            index = inPlayRoles.index(outsider)
+            scalar = 0.0
+            if outsider in inPlayOutsider:
+                scalar += 1
 
-        #         roleChance = roleChance / playerCount
-        #         self.roleGrid[playerSeat][playerRole] = roleChance
+            for seat in validPlayers:
+                self.roleGrid[seat][index] += scalar
 
-    def learn(self, playerCount: int, inPlayRoles: list[Role], knowledge: Knowledge):
-        presentTownsfolk, presentOutsider, presentMinion, presentDemon = getTypeCounts(
-            playerCount
-        )
+        for minion in minionRoles:
+            index = inPlayRoles.index(minion)
+            scalar = 0.0
+            if minion in inPlayMinion:
+                scalar += 1
 
-        townsfolkCount = len([_ for _ in inPlayRoles if isTownsfolk(_)])
-        outsiderCount = len([_ for _ in inPlayRoles if isOutsider(_)])
-        minionCount = len([_ for _ in inPlayRoles if isMinion(_)])
-        demonCount = len([_ for _ in inPlayRoles if isDemon(_)])
+            for seat in validPlayers:
+                self.roleGrid[seat][index] += scalar
 
-        if knowledge.infoType is InfoType.IS_ROLE:
-            # Storyteller information
-            if knowledge.source is None:
-                pass
+        for demon in demonRoles:
+            index = inPlayRoles.index(demon)
+            scalar = 0.0
+            if demon in inPlayDemon:
+                scalar += 1
+
+            for seat in validPlayers:
+                self.roleGrid[seat][index] += scalar
+
+    def learn(self, inPlayRoles: list[Role], knowledge: Knowledge):
+        self.buildRoleGrid(inPlayRoles=inPlayRoles)
+        pass
 
 
 def main() -> None:
@@ -197,20 +210,20 @@ def main() -> None:
         for seat in list(range(playerCount))
     ]
 
-    learnStartingInfo(playerCount=playerCount, inPlayRoles=inPlayRoles, players=players)
+    learnStartingInfo(inPlayRoles=inPlayRoles, players=players)
 
-    # print(players[0].roleGrid[0])
-    # print(players[0].roleGrid[1])
-    # sum = 0.0
-    # for chance in players[0].roleGrid[0]:
-    #     sum += chance
+    # for role in inPlayRoles:
+    #     sum = 0.0
+    #     for seat in players[0].roleGrid:
+    #         sum += seat[role]
+    #         print(f"{seat[role]}")
+    #     print(f"{role.name}: {sum}")
 
-    # print(sum)
+    # for knowledge in players[0].knowledgeBank:
+    #     print(knowledge)
 
 
-def learnStartingInfo(
-    playerCount: int, inPlayRoles: list[Role], players: list[Player]
-) -> None:
+def learnStartingInfo(inPlayRoles: list[Role], players: list[Player]) -> None:
     for player in players:
         learnedInfo = Knowledge(
             day=0,
@@ -220,10 +233,7 @@ def learnStartingInfo(
             information=player.role,
         )
         player.knowledgeBank.append(learnedInfo)
-        print(learnedInfo)
-        player.learn(
-            playerCount=playerCount, inPlayRoles=inPlayRoles, knowledge=learnedInfo
-        )
+        player.learn(inPlayRoles=inPlayRoles, knowledge=learnedInfo)
 
 
 def getRoles(playerCount: int) -> tuple[list, Role]:
