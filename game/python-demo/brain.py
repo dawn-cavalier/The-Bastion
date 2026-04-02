@@ -1,4 +1,5 @@
 import random as r
+import math as m
 
 from enums.roles import *
 from brainHelper import *
@@ -101,7 +102,14 @@ class Player:
 
         # Storyteller information
         if source is None:
-            self.roleGrid[targetSeat][role] += 1000
+            for seat, roles in enumerate(self.roleGrid):
+                for roleIndex, weight in enumerate(roles):
+                    if seat is targetSeat and role == roleIndex:
+                        # TODO: Find right numbers
+                        self.roleGrid[seat][roleIndex] = 1000.0
+                    elif seat is targetSeat or role == roleIndex:
+                        # TODO: Find right numbers
+                        self.roleGrid[seat][roleIndex] = 0.0
 
     def buildRoleGrid(self, inScriptRoles: list[Role]):
         playerCount: int = 0
@@ -111,17 +119,14 @@ class Player:
         demonCount: int = 0
         inPlayRoles: list[Role] = []
 
-        townsfolkRoles = [role for role in inScriptRoles if isTownsfolk(role)]
-        outsiderRoles = [role for role in inScriptRoles if isOutsider(role)]
-        minionRoles = [role for role in inScriptRoles if isMinion(role)]
-        demonRoles = [role for role in inScriptRoles if isDemon(role)]
-
         playerCount = [
             knowledge.information
             for knowledge in self.knowledgeBank
             if knowledge.infoType is InfoType.COUNT_PLAYERS
         ][0]
-        self.roleGrid = [[0.0 for role in inScriptRoles] for seat in range(playerCount)]
+        self.roleGrid = [
+            [0.001 for role in inScriptRoles] for seat in range(playerCount)
+        ]
 
         for knowledge in self.knowledgeBank:
             match knowledge.infoType:
@@ -139,16 +144,96 @@ class Player:
                 case InfoType.IS_ROLE:
                     self.__isRole__(knowledge=knowledge)
 
-        print(inPlayRoles)
+        test = 1
+        error = 0.05
 
-    def learn(self, inScriptRoles: list[Role], knowledge: Knowledge):
+        townsfolkSum = 0.0
+        outsiderSum = 0.0
+        minionSum = 0.0
+        demonSum = 0.0
+
+        while (
+            abs(townsfolkSum - townsfolkCount) > error
+            or abs(outsiderSum - outsiderCount) > error
+            or abs(minionSum - minionCount) > error
+            or abs(demonSum - demonCount) > error
+        ):
+            townsfolkSum = 0.0
+            outsiderSum = 0.0
+            minionSum = 0.0
+            demonSum = 0.0
+
+            # Get Normalization Sums
+            for index, role in enumerate(inScriptRoles):
+                roleSum = 0.0
+                for seat in range(playerCount):
+                    roleSum += self.roleGrid[seat][index]
+
+                if isTownsfolk(role):
+                    townsfolkSum += roleSum
+                if isOutsider(role):
+                    outsiderSum += roleSum
+                if isMinion(role):
+                    minionSum += roleSum
+                if isDemon(role):
+                    demonSum += roleSum
+
+            # Normalize values
+            for index, role in enumerate(inScriptRoles):
+                norm = 0.0
+                if isTownsfolk(role):
+                    norm = townsfolkCount / townsfolkSum
+                if isOutsider(role):
+                    if outsiderCount == 0:
+                        norm = 0
+                    else:
+                        norm = outsiderCount / outsiderSum
+                if isMinion(role):
+                    norm = minionCount / minionSum
+                if isDemon(role):
+                    norm = demonCount / demonSum
+
+                for seat in range(playerCount):
+                    self.roleGrid[seat][index] *= norm
+
+            # Normalize Roles
+            for index, role in enumerate(inScriptRoles):
+                roleSum = 0.0
+                for seat in range(playerCount):
+                    roleSum += self.roleGrid[seat][index]
+
+                if roleSum > 1.0:
+                    for seat in range(playerCount):
+                        self.roleGrid[seat][index] /= roleSum
+
+            townsfolkSum = 0.0
+            outsiderSum = 0.0
+            minionSum = 0.0
+            demonSum = 0.0
+
+            # Get Normalization Sums
+            for index, role in enumerate(inScriptRoles):
+                roleSum = 0.0
+                for seat in range(playerCount):
+                    roleSum += self.roleGrid[seat][index]
+
+                if isTownsfolk(role):
+                    townsfolkSum += roleSum
+                if isOutsider(role):
+                    outsiderSum += roleSum
+                if isMinion(role):
+                    minionSum += roleSum
+                if isDemon(role):
+                    demonSum += roleSum
+
+    def learn(self, inScriptRoles: list[Role], learnedInfo: list[Knowledge]):
+        self.knowledgeBank += learnedInfo
         self.buildRoleGrid(inScriptRoles=inScriptRoles)
-        pass
 
 
 def main() -> None:
     r.seed(a=0, version=2)
-    playerCount = 7
+    playerCount = 8
     inScriptRoles = [_ for _ in Role if _ >= Role.WASHERWOMAN]
     roles, drunkRole = getRoles(playerCount)
     players = [
@@ -163,12 +248,16 @@ def main() -> None:
 
     learnStartingInfo(inScriptRoles=inScriptRoles, players=players)
 
-    # for role in inPlayRoles:
-    #     sum = 0.0
-    #     for seat in players[0].roleGrid:
-    #         sum += seat[role]
-    #         print(f"{seat[role]}")
-    #     print(f"{role.name}: {sum}")
+    targetPlayer = 0
+    for role in inScriptRoles:
+        sum = 0.0
+        for seat in players[targetPlayer].roleGrid:
+            sum += seat[role]
+            print(f"{seat[role]}")
+        print(f"{role.name}: {sum}")
+
+    for seat in range(playerCount):
+        print(f"Seat {seat}: {m.fsum(players[targetPlayer].roleGrid[seat])}")
 
     # for knowledge in players[0].knowledgeBank:
     #     print(knowledge)
@@ -192,8 +281,7 @@ def learnStartingInfo(inScriptRoles: list[Role], players: list[Player]) -> None:
                 information=player.role,
             ),
         ]
-        player.knowledgeBank += learnedInfo
-        player.learn(inScriptRoles=inScriptRoles, knowledge=learnedInfo)
+        player.learn(inScriptRoles=inScriptRoles, learnedInfo=learnedInfo)
 
 
 def getRoles(playerCount: int) -> tuple[list, Role]:
