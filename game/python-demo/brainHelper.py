@@ -1,4 +1,5 @@
 from enums.roles import *
+import random as r
 
 
 def isTownsfolk(role: Role) -> bool:
@@ -82,3 +83,37 @@ def getTypeCounts(playerCount: int) -> tuple[int, int, int, int]:
     # minionCount = int((playerCount - 4) / 3)
 
     return (townsfolkCount, outsiderCount, minionCount, demonCount)
+
+def getRoles(playerCount: int) -> tuple[list, Role]:
+    townsfolkCount, outsiderCount, minionCount, demonCount = getTypeCounts(playerCount)
+
+    activeRoles: list[Role] = []
+    allRoles = [role for role in Role if role > -1]
+    drunkPresent = False
+    drunkRole: Role = Role.NONE
+
+    activeRoles += r.sample([role for role in allRoles if isMinion(role)], minionCount)
+    if Role.BARON in activeRoles:
+        townsfolkCount -= 2
+        outsiderCount += 2
+
+    activeRoles += r.sample(
+        [role for role in allRoles if isOutsider(role)], outsiderCount
+    )
+    if Role.DRUNK in activeRoles:
+        townsfolkCount += 1
+        outsiderCount -= 1
+        activeRoles.remove(Role.DRUNK)
+        drunkPresent = True
+
+    activeRoles += r.sample(
+        [role for role in allRoles if isTownsfolk(role)], townsfolkCount
+    )
+    if drunkPresent:
+        drunkRole = r.sample([role for role in activeRoles if isTownsfolk(role)], 1)[0]
+
+    activeRoles += r.sample([role for role in allRoles if isDemon(role)], demonCount)
+    r.shuffle(activeRoles)
+
+    return (activeRoles, drunkRole)
+    
