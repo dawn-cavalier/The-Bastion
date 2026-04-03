@@ -4,6 +4,7 @@ from knowledge import *
 
 from brainHelper import *
 
+
 class Player:
     role: Role
     seat: int
@@ -12,15 +13,14 @@ class Player:
     socialTrust: list[float]
     roleGrid: list[list[float]]
 
-    def __init__(self, seat: int, role: Role, isDrunk: bool, playerCount: int) -> None:
+    def __init__(self, seat: int, role: Role, reminderTokens: list[Status], playerCount: int) -> None:
         self.seat = seat
         self.role = role
         self.reminderTokens = []
         self.knowledgeBank = []
         self.roleGrid = []
 
-        if isDrunk:
-            self.reminderTokens.append(Status.IS_DRUNK)
+        self.reminderTokens += reminderTokens
 
         self.socialTrust = [0.5 for _ in range(playerCount)]
         inPlayRoles = [_ for _ in Role if _ >= Role.WASHERWOMAN]
@@ -60,10 +60,9 @@ class Player:
             for seat, roles in enumerate(self.roleGrid):
                 for roleIndex, weight in enumerate(roles):
                     if seat is targetSeat and role == roleIndex:
-                        # TODO: Find right numbers
+                        # TODO: Review this method and how it interacts with building the role grid
                         self.roleGrid[seat][roleIndex] = 1.0
                     elif seat is targetSeat or role == roleIndex:
-                        # TODO: Find right numbers
                         self.roleGrid[seat][roleIndex] = 0.0
 
     def buildRoleGrid(self, inScriptRoles: list[Role]):
@@ -80,7 +79,8 @@ class Player:
             if knowledge.infoType is InfoType.COUNT_PLAYERS
         ][0]
         self.roleGrid = [
-            [1/(playerCount * len(inScriptRoles)) for role in inScriptRoles] for seat in range(playerCount)
+            [1 / (playerCount * len(inScriptRoles)) for role in inScriptRoles]
+            for seat in range(playerCount)
         ]
 
         for knowledge in self.knowledgeBank:
@@ -184,22 +184,22 @@ class Player:
         self.knowledgeBank += learnedInfo
         self.buildRoleGrid(inScriptRoles=inScriptRoles)
 
-def learnStartingInfo(inScriptRoles: list[Role], players: list[Player]) -> None:
-    for player in players:
+    def learnMyRole(self, inScriptRoles: list[Role]) -> None:
         learnedInfo = [
             Knowledge(
                 day=0,
                 source=None,
-                target=player.seat,
+                target=self.seat,
                 infoType=InfoType.IS_ROLE,
-                information=player.role,
+                information=self.role,
             ),
             Knowledge(
                 day=0,
                 source=None,
                 target=None,
                 infoType=InfoType.INPLAY_ROLE,
-                information=player.role,
+                information=self.role,
             ),
         ]
-        player.learn(inScriptRoles=inScriptRoles, learnedInfo=learnedInfo)
+
+        self.learn(inScriptRoles=inScriptRoles, learnedInfo=learnedInfo)

@@ -45,3 +45,4 @@ class Status(IntEnum):
     IS_RED_HERRING = 2
     NO_ABILITY = 3
     IS_MASTER = 4
+    

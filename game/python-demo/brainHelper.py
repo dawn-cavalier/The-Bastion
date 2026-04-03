@@ -84,36 +84,54 @@ def getTypeCounts(playerCount: int) -> tuple[int, int, int, int]:
 
     return (townsfolkCount, outsiderCount, minionCount, demonCount)
 
-def getRoles(playerCount: int) -> tuple[list, Role]:
+
+def getRoles(playerCount: int, inScriptRoles: list[Role]) -> tuple[list, list]:
     townsfolkCount, outsiderCount, minionCount, demonCount = getTypeCounts(playerCount)
 
     activeRoles: list[Role] = []
-    allRoles = [role for role in Role if role > -1]
+    reminderTokens: list[list[Status]] = [[] for seat in range(playerCount)]
     drunkPresent = False
     drunkRole: Role = Role.NONE
 
-    activeRoles += r.sample([role for role in allRoles if isMinion(role)], minionCount)
+    # Add Minions
+    activeRoles += r.sample(
+        [role for role in inScriptRoles if isMinion(role)], minionCount
+    )
+    # Check for Baron
     if Role.BARON in activeRoles:
         townsfolkCount -= 2
         outsiderCount += 2
 
+    # Add Outsiders
     activeRoles += r.sample(
-        [role for role in allRoles if isOutsider(role)], outsiderCount
+        [role for role in inScriptRoles if isOutsider(role)], outsiderCount
     )
+    # Check for Drunk
     if Role.DRUNK in activeRoles:
         townsfolkCount += 1
         outsiderCount -= 1
         activeRoles.remove(Role.DRUNK)
         drunkPresent = True
 
+    # Add Townsfolk
     activeRoles += r.sample(
-        [role for role in allRoles if isTownsfolk(role)], townsfolkCount
+        [role for role in inScriptRoles if isTownsfolk(role)], townsfolkCount
     )
+
+    # Mark the drunk player, if present
     if drunkPresent:
         drunkRole = r.sample([role for role in activeRoles if isTownsfolk(role)], 1)[0]
 
-    activeRoles += r.sample([role for role in allRoles if isDemon(role)], demonCount)
+    # Add Demon
+    activeRoles += r.sample(
+        [role for role in inScriptRoles if isDemon(role)], demonCount
+    )
+
     r.shuffle(activeRoles)
 
-    return (activeRoles, drunkRole)
-    
+    # Add Drunk Reminder Token
+    for seat, role in enumerate(activeRoles):
+        if role is drunkRole:
+            reminderTokens[seat] += [Status.IS_DRUNK]
+
+    return (activeRoles, reminderTokens)
