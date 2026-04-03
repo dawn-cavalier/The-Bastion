@@ -106,7 +106,7 @@ class Player:
                 for roleIndex, weight in enumerate(roles):
                     if seat is targetSeat and role == roleIndex:
                         # TODO: Find right numbers
-                        self.roleGrid[seat][roleIndex] = 1000.0
+                        self.roleGrid[seat][roleIndex] = 1.0
                     elif seat is targetSeat or role == roleIndex:
                         # TODO: Find right numbers
                         self.roleGrid[seat][roleIndex] = 0.0
@@ -125,7 +125,7 @@ class Player:
             if knowledge.infoType is InfoType.COUNT_PLAYERS
         ][0]
         self.roleGrid = [
-            [0.001 for role in inScriptRoles] for seat in range(playerCount)
+            [1/(playerCount * len(inScriptRoles)) for role in inScriptRoles] for seat in range(playerCount)
         ]
 
         for knowledge in self.knowledgeBank:
@@ -144,7 +144,6 @@ class Player:
                 case InfoType.IS_ROLE:
                     self.__isRole__(knowledge=knowledge)
 
-        test = 1
         error = 0.05
 
         townsfolkSum = 0.0
@@ -257,7 +256,7 @@ def main() -> None:
         print(f"{role.name}: {sum}")
 
     for seat in range(playerCount):
-        print(f"Seat {seat}: {m.fsum(players[targetPlayer].roleGrid[seat])}")
+        print(f"Seat {seat} {roles[seat].name}")
 
     # for knowledge in players[0].knowledgeBank:
     #     print(knowledge)
