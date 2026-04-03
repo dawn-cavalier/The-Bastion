@@ -183,3 +183,23 @@ class Player:
     def learn(self, inScriptRoles: list[Role], learnedInfo: list[Knowledge]):
         self.knowledgeBank += learnedInfo
         self.buildRoleGrid(inScriptRoles=inScriptRoles)
+
+def learnStartingInfo(inScriptRoles: list[Role], players: list[Player]) -> None:
+    for player in players:
+        learnedInfo = [
+            Knowledge(
+                day=0,
+                source=None,
+                target=player.seat,
+                infoType=InfoType.IS_ROLE,
+                information=player.role,
+            ),
+            Knowledge(
+                day=0,
+                source=None,
+                target=None,
+                infoType=InfoType.INPLAY_ROLE,
+                information=player.role,
+            ),
+        ]
+        player.learn(inScriptRoles=inScriptRoles, learnedInfo=learnedInfo)

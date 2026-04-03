@@ -4,7 +4,7 @@ import math as m
 from brainHelper import *
 from enums.infoType import *
 from knowledge import *
-from brainPlayer import *
+from brainPlayer import Player, learnStartingInfo
 
 def main() -> None:
     r.seed(a=0, version=2)
@@ -36,27 +36,6 @@ def main() -> None:
 
     # for knowledge in players[0].knowledgeBank:
     #     print(knowledge)
-
-
-def learnStartingInfo(inScriptRoles: list[Role], players: list[Player]) -> None:
-    for player in players:
-        learnedInfo = [
-            Knowledge(
-                day=0,
-                source=None,
-                target=player.seat,
-                infoType=InfoType.IS_ROLE,
-                information=player.role,
-            ),
-            Knowledge(
-                day=0,
-                source=None,
-                target=None,
-                infoType=InfoType.INPLAY_ROLE,
-                information=player.role,
-            ),
-        ]
-        player.learn(inScriptRoles=inScriptRoles, learnedInfo=learnedInfo)
 
 
 
