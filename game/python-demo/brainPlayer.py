@@ -1,3 +1,5 @@
+import math as m
+
 from enums.infoType import *
 from enums.roles import *
 from knowledge import *
@@ -13,7 +15,9 @@ class Player:
     socialTrust: list[float]
     roleGrid: list[list[float]]
 
-    def __init__(self, seat: int, role: Role, reminderTokens: list[Status], playerCount: int) -> None:
+    def __init__(
+        self, seat: int, role: Role, reminderTokens: list[Status], playerCount: int
+    ) -> None:
         self.seat = seat
         self.role = role
         self.reminderTokens = []
@@ -73,15 +77,28 @@ class Player:
         demonCount: int = 0
         inPlayRoles: list[Role] = []
 
+        townsfolk = [role for role in inScriptRoles if isTownsfolk(role)]
+        outsiders = [role for role in inScriptRoles if isOutsider(role)]
+        minions = [role for role in inScriptRoles if isMinion(role)]
+        demons = [role for role in inScriptRoles if isDemon(role)]
+
         playerCount = [
             knowledge.information
             for knowledge in self.knowledgeBank
             if knowledge.infoType is InfoType.COUNT_PLAYERS
         ][0]
+
         self.roleGrid = [
-            [1 / (playerCount * len(inScriptRoles)) for role in inScriptRoles]
-            for seat in range(playerCount)
+            [None for role in inScriptRoles] for seat in range(playerCount)
         ]
+
+        seatsWithInfo = []
+        rolesWithInfo = []
+        
+        knownTownsfolk: float = 0.0
+        knownOutsider: float = 0.0
+        knownMinion: float = 0.0
+        knownDemon: float = 0.0
 
         for knowledge in self.knowledgeBank:
             match knowledge.infoType:
@@ -96,91 +113,72 @@ class Player:
                 case InfoType.INPLAY_ROLE:
                     if knowledge.information not in inPlayRoles:
                         inPlayRoles.append(knowledge.information)
-                case InfoType.IS_ROLE:
+                case InfoType.IS_ROLE:    
                     self.__isRole__(knowledge=knowledge)
+                    if knowledge.target not in seatsWithInfo:
+                        seatsWithInfo.append(knowledge.target)
+                        if isTownsfolk(knowledge.information):
+                            knownTownsfolk += 1
+                        if isOutsider(knowledge.information):
+                            knownOutsider += 1
+                        if isMinion(knowledge.information):
+                            knownMinion += 1
+                        if isDemon(knowledge.information):
+                            knownDemon += 1
 
-        error = 0.05
+                    if knowledge.information not in rolesWithInfo:
+                        rolesWithInfo.append(knowledge.information)
 
-        townsfolkSum = 0.0
-        outsiderSum = 0.0
-        minionSum = 0.0
-        demonSum = 0.0
+        unknownTownsfolk: float = townsfolkCount - knownTownsfolk 
+        unknownOutsider: float = outsiderCount - knownOutsider
+        unknownMinion: float = minionCount - knownMinion
+        unknownDemon: float = demonCount - knownDemon
 
-        while (
-            abs(townsfolkSum - townsfolkCount) > error
-            or abs(outsiderSum - outsiderCount) > error
-            or abs(minionSum - minionCount) > error
-            or abs(demonSum - demonCount) > error
-        ):
-            townsfolkSum = 0.0
-            outsiderSum = 0.0
-            minionSum = 0.0
-            demonSum = 0.0
+        if Role.BARON in inScriptRoles:
+            adjustment = 2.0 * (minionCount / len(minions))
+            unknownOutsider += adjustment
+            unknownTownsfolk -= adjustment
 
-            # Get Normalization Sums
+        if Role.DRUNK in inScriptRoles:
+            adjustment = outsiderCount / len(outsiders)
+            if Role.BARON in inScriptRoles:
+                adjustment += ((outsiderCount + 2) / len(outsiders)) * (
+                    minionCount / len(minions)
+                )
+            unknownOutsider -= adjustment
+            unknownTownsfolk += adjustment
+
+        unknownPlayers = playerCount - (knownTownsfolk + knownOutsider + knownMinion + knownDemon)
+
+        unknownTownsfolk /= unknownPlayers * (len(townsfolk) - knownTownsfolk)
+        unknownOutsider /= unknownPlayers * (len(outsiders) - knownOutsider)
+        unknownMinion /= unknownPlayers * (len(minions) - knownMinion)
+        if (len(demons) - knownDemon) > 0.0 and unknownPlayers > 0.0:
+            unknownDemon /= unknownPlayers * (len(demons) - knownDemon)
+        else:
+            unknownDemon = 0.0
+
+        for seat in range(playerCount):
+            if seat in seatsWithInfo:
+                continue
             for index, role in enumerate(inScriptRoles):
-                roleSum = 0.0
-                for seat in range(playerCount):
-                    roleSum += self.roleGrid[seat][index]
-
+                if role in rolesWithInfo:
+                    continue
                 if isTownsfolk(role):
-                    townsfolkSum += roleSum
-                if isOutsider(role):
-                    outsiderSum += roleSum
-                if isMinion(role):
-                    minionSum += roleSum
-                if isDemon(role):
-                    demonSum += roleSum
+                    self.roleGrid[seat][index] = unknownTownsfolk
+                elif isOutsider(role):
+                    self.roleGrid[seat][index] = unknownOutsider
+                elif isMinion(role):
+                    self.roleGrid[seat][index] = unknownMinion
+                elif isDemon(role):
+                    self.roleGrid[seat][index] = unknownDemon
+                else:
+                    raise Exception("Invalid Role Passed In!")
 
-            # Normalize values
-            for index, role in enumerate(inScriptRoles):
-                norm = 0.0
-                if isTownsfolk(role):
-                    norm = townsfolkCount / townsfolkSum
-                if isOutsider(role):
-                    if outsiderCount == 0:
-                        norm = 0
-                    else:
-                        norm = outsiderCount / outsiderSum
-                if isMinion(role):
-                    norm = minionCount / minionSum
-                if isDemon(role):
-                    norm = demonCount / demonSum
 
-                for seat in range(playerCount):
-                    self.roleGrid[seat][index] *= norm
-
-            # Normalize Roles
-            for index, role in enumerate(inScriptRoles):
-                roleSum = 0.0
-                for seat in range(playerCount):
-                    roleSum += self.roleGrid[seat][index]
-
-                if roleSum > 1.0:
-                    for seat in range(playerCount):
-                        self.roleGrid[seat][index] /= roleSum
-
-            townsfolkSum = 0.0
-            outsiderSum = 0.0
-            minionSum = 0.0
-            demonSum = 0.0
-
-            # Get Normalization Sums
-            for index, role in enumerate(inScriptRoles):
-                roleSum = 0.0
-                for seat in range(playerCount):
-                    roleSum += self.roleGrid[seat][index]
-
-                if isTownsfolk(role):
-                    townsfolkSum += roleSum
-                if isOutsider(role):
-                    outsiderSum += roleSum
-                if isMinion(role):
-                    minionSum += roleSum
-                if isDemon(role):
-                    demonSum += roleSum
-
-    def learn(self, inScriptRoles: list[Role], learnedInfo: list[Knowledge]):
+    def learnAndRebuildGrid(
+        self, inScriptRoles: list[Role], learnedInfo: list[Knowledge]
+    ):
         self.knowledgeBank += learnedInfo
         self.buildRoleGrid(inScriptRoles=inScriptRoles)
 
@@ -202,4 +200,4 @@ class Player:
             ),
         ]
 
-        self.learn(inScriptRoles=inScriptRoles, learnedInfo=learnedInfo)
+        self.learnAndRebuildGrid(inScriptRoles=inScriptRoles, learnedInfo=learnedInfo)

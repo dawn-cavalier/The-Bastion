@@ -27,16 +27,40 @@ def main() -> None:
     for player in players:
         player.learnMyRole(inScriptRoles=inScriptRoles)
 
-    firstNightInfo(players=players, inScriptRoles=inScriptRoles)
+    # firstNightInfo(players=players, inScriptRoles=inScriptRoles)
 
     # Debug printing
-    targetPlayer = 2
-    for role in inScriptRoles:
-        sum = 0.0
-        for seat in players[targetPlayer].roleGrid:
-            sum += seat[role]
-            print(f"{seat[role]}")
-        print(f"{role.name}: {sum}\n")
+    # targetPlayer = 5
+    # playerSum = [0.0 for seat in range(playerCount)]
+    # for role in inScriptRoles:
+    #     roleSum = 0.0
+    #     for seatNum, seat in enumerate(players[targetPlayer].roleGrid):
+    #         roleSum += seat[role]
+    #         playerSum[seatNum] += seat[role]
+    #         print(f"{seat[role]:.5f}", end=" ")
+    #     print(f"\n{role.name}: {roleSum:.5f}\n")
+
+    # targetPlayer = 0
+    # playerSum = [0.0 for seat in range(playerCount)]
+    # for role in inScriptRoles:
+    #     roleSum = 0.0
+    #     for seatNum, seat in enumerate(players[targetPlayer].roleGrid):
+    #         roleSum += seat[role]
+    #         playerSum[seatNum] += seat[role]
+    #         print(f"{seat[role]:.5f}", end=" ")
+    #     print(f"\n{role.name}: {roleSum:.5f}\n")
+
+    for targetPlayer in range(playerCount):
+        playerSum = [0.0 for seat in range(playerCount)]
+        for role in inScriptRoles:
+            roleSum = 0.0
+            for seatNum, seat in enumerate(players[targetPlayer].roleGrid):
+                roleSum += seat[role]
+                playerSum[seatNum] += seat[role]
+        print(f"Seat {targetPlayer:<6} {players[targetPlayer].role.name:<14}:", end="\t\t")
+        for seat, player in enumerate(playerSum):
+            print(f"{player:.5f}", end=" ")
+        print("")
 
     # for seat in range(playerCount):
     #     print(f"Seat {seat} {players[seat].role.name}")
