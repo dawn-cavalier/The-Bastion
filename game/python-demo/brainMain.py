@@ -9,8 +9,8 @@ from brainPlayer import Player
 
 
 def main() -> None:
-    r.seed(a=0, version=2)
-    playerCount = 8
+    r.seed(a=None, version=2)
+    playerCount = 10
     inScriptRoles = [_ for _ in Role if _ >= Role.WASHERWOMAN]
     roles, reminderTokens = getRoles(
         playerCount=playerCount, inScriptRoles=inScriptRoles

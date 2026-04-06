@@ -57,16 +57,15 @@ class Player:
     def __isRole__(self, knowledge: Knowledge):
         source: int | None = knowledge.source
         targetSeat: int = knowledge.target
-        role: Role = knowledge.information
+        learnedRoles: tuple[Role] = knowledge.information
 
         # Storyteller information
         if source is None:
             for seat, roles in enumerate(self.roleGrid):
                 for roleIndex, weight in enumerate(roles):
-                    if seat is targetSeat and role == roleIndex:
-                        # TODO: Review this method and how it interacts with building the role grid
-                        self.roleGrid[seat][roleIndex] = 1.0
-                    elif seat is targetSeat or role == roleIndex:
+                    if seat is targetSeat and roleIndex in learnedRoles:
+                        self.roleGrid[seat][roleIndex] = 1.0/len(learnedRoles)
+                    elif seat is targetSeat or roleIndex in learnedRoles:
                         self.roleGrid[seat][roleIndex] = 0.0
 
     def buildRoleGrid(self, inScriptRoles: list[Role]):
@@ -94,7 +93,7 @@ class Player:
 
         seatsWithInfo = []
         rolesWithInfo = []
-        
+
         knownTownsfolk: float = 0.0
         knownOutsider: float = 0.0
         knownMinion: float = 0.0
@@ -113,23 +112,25 @@ class Player:
                 case InfoType.INPLAY_ROLE:
                     if knowledge.information not in inPlayRoles:
                         inPlayRoles.append(knowledge.information)
-                case InfoType.IS_ROLE:    
+                case InfoType.IS_ROLE:
                     self.__isRole__(knowledge=knowledge)
                     if knowledge.target not in seatsWithInfo:
                         seatsWithInfo.append(knowledge.target)
-                        if isTownsfolk(knowledge.information):
-                            knownTownsfolk += 1
-                        if isOutsider(knowledge.information):
-                            knownOutsider += 1
-                        if isMinion(knowledge.information):
-                            knownMinion += 1
-                        if isDemon(knowledge.information):
-                            knownDemon += 1
+                        for role in knowledge.information:
+                            if isTownsfolk(role):
+                                knownTownsfolk += 1/len(knowledge.information)
+                            if isOutsider(role):
+                                knownOutsider += 1/len(knowledge.information)
+                            if isMinion(role):
+                                knownMinion += 1/len(knowledge.information)
+                            if isDemon(role):
+                                knownDemon += 1/len(knowledge.information)
 
-                    if knowledge.information not in rolesWithInfo:
-                        rolesWithInfo.append(knowledge.information)
+                    for role in knowledge.information:
+                        if role not in rolesWithInfo:
+                            rolesWithInfo.append(role)
 
-        unknownTownsfolk: float = townsfolkCount - knownTownsfolk 
+        unknownTownsfolk: float = townsfolkCount - knownTownsfolk
         unknownOutsider: float = outsiderCount - knownOutsider
         unknownMinion: float = minionCount - knownMinion
         unknownDemon: float = demonCount - knownDemon
@@ -148,7 +149,9 @@ class Player:
             unknownOutsider -= adjustment
             unknownTownsfolk += adjustment
 
-        unknownPlayers = playerCount - (knownTownsfolk + knownOutsider + knownMinion + knownDemon)
+        unknownPlayers = playerCount - (
+            knownTownsfolk + knownOutsider + knownMinion + knownDemon
+        )
 
         unknownTownsfolk /= unknownPlayers * (len(townsfolk) - knownTownsfolk)
         unknownOutsider /= unknownPlayers * (len(outsiders) - knownOutsider)
@@ -175,7 +178,6 @@ class Player:
                 else:
                     raise Exception("Invalid Role Passed In!")
 
-
     def learnAndRebuildGrid(
         self, inScriptRoles: list[Role], learnedInfo: list[Knowledge]
     ):
@@ -189,14 +191,14 @@ class Player:
                 source=None,
                 target=self.seat,
                 infoType=InfoType.IS_ROLE,
-                information=self.role,
+                information=(self.role,),
             ),
             Knowledge(
                 day=0,
                 source=None,
                 target=None,
                 infoType=InfoType.INPLAY_ROLE,
-                information=self.role,
+                information=(self.role,),
             ),
         ]
 
