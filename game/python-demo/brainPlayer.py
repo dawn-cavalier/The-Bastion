@@ -87,14 +87,25 @@ class Player:
                         self.roleGrid[seat][roleIndex] = 0.0
 
             # Reduce and recalculate the soft claims by the hard claims
+            removedRolesForClaim = []
             for softClaim in softClaims:
                 if learnedRole in softClaim.information:
-                    # TODO: THIS REMOVES THE ITEM FROM THE ORIGINAL ARRAY. THIS CAN'T WORK FOR NON-STORYTELLER INFO
-                    softClaim.information.remove(learnedRole)
+                    removedRolesForClaim.append((softClaim, learnedRole))
 
             for softClaim in softClaims:
                 targetSeat: int = softClaim.target
-                learnedRoles: tuple[Role] = softClaim.information
+                learnedRoles: tuple[Role] = []
+
+                learnedRoles = [
+                    role
+                    for role in softClaim.information
+                    if role
+                    not in [
+                        removedRole
+                        for (claim, removedRole) in removedRolesForClaim
+                        if claim is softClaim
+                    ]
+                ]
 
                 for seat, roles in enumerate(self.roleGrid):
                     for roleIndex, weight in enumerate(roles):
@@ -102,17 +113,6 @@ class Player:
                             self.roleGrid[seat][roleIndex] = 1.0 / len(learnedRoles)
                         elif seat is targetSeat or roleIndex in learnedRoles:
                             self.roleGrid[seat][roleIndex] = 0.0
-
-        # for info in knowledge:
-        #     targetSeat: int = info.target
-        #     learnedRoles: tuple[Role] = info.information
-
-        #     for seat, roles in enumerate(self.roleGrid):
-        #         for roleIndex, weight in enumerate(roles):
-        #             if seat is targetSeat and roleIndex in learnedRoles:
-        #                 self.roleGrid[seat][roleIndex] = 1.0/len(learnedRoles)
-        #             elif seat is targetSeat or roleIndex in learnedRoles:
-        #                 self.roleGrid[seat][roleIndex] = 0.0
 
     def buildRoleGrid(self, inScriptRoles: list[Role]):
         playerCount: int = 0

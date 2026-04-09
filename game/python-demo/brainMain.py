@@ -67,9 +67,9 @@ def main() -> None:
     #     print(f"Seat {seat} {players[seat].role.name}")
     #     print(f"Reminder Tokens: {players[seat].reminderTokens}")
 
-    targetPlayer = [player.seat for player in players if isMinion(player.role)][0]
-    for knowledge in players[targetPlayer].knowledgeBank:
-        print(knowledge)
+    # targetPlayer = [player.seat for player in players if isMinion(player.role)][0]
+    # for knowledge in players[targetPlayer].knowledgeBank:
+    #     print(knowledge)
 
 
 def firstNightInfo(players: list[Player], inScriptRoles: list[Role]) -> None:
