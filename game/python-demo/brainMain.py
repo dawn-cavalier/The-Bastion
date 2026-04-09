@@ -10,7 +10,7 @@ from brainPlayer import Player
 
 def main() -> None:
     r.seed(a=None, version=2)
-    playerCount = 12
+    playerCount = 7
     inScriptRoles = [_ for _ in Role if _ >= Role.WASHERWOMAN]
     roles, reminderTokens = getRoles(
         playerCount=playerCount, inScriptRoles=inScriptRoles
@@ -27,7 +27,7 @@ def main() -> None:
     for player in players:
         player.learnMyRole(inScriptRoles=inScriptRoles)
 
-    firstNightInfo(players=players, inScriptRoles=inScriptRoles)
+    # firstNightInfo(players=players, inScriptRoles=inScriptRoles)
 
     # Debug printing
     # targetPlayer = [player.seat for player in players if isMinion(player.role)][0]
@@ -50,6 +50,19 @@ def main() -> None:
     #         playerSum[seatNum] += seat[role]
     #         print(f"{seat[role]:.5f}", end=" ")
     #     print(f"\n{role.name}: {roleSum:.5f}\n")
+
+    # targetPlayer = [player.seat for player in players if isMinion(player.role)][0]
+    # inPlayRoles = players[targetPlayer].__getInPlayRoles__(inScriptRoles=inScriptRoles)
+    # print (inPlayRoles)
+
+    # targetPlayer = [player.seat for player in players if isMinion(player.role)][0]
+    # notInPlayRoles = players[targetPlayer].__getNotInPlayRoles__(inScriptRoles=inScriptRoles)
+    # print (notInPlayRoles)
+
+    # targetPlayer = [player.seat for player in players if isMinion(player.role)][0]
+    # knownPlayers = players[targetPlayer].__getKnownPlayers__(inScriptRoles=inScriptRoles)
+    # print (knownPlayers)
+
 
     # for targetPlayer in range(playerCount):
     #     playerSum = [0.0 for seat in range(playerCount)]

@@ -54,7 +54,48 @@ class Player:
     def __str__(self) -> str:
         return f"Seat: {self.seat}\nRole: {self.role.name}\n"
 
-    def __isRole__(
+    def __getKnownInPlayRoles__(self, inScriptRoles: list[Role]) -> list[Role]:
+        sumOfRoles = [0.0 for role in inScriptRoles]
+        for seat, roles in enumerate(self.roleGrid):
+            for roleIndex, weight in enumerate(roles):
+                sumOfRoles[roleIndex] += weight
+
+        error = 0.00005
+        knownRoles: list[Role] = []
+        for index, role in enumerate(inScriptRoles):
+            if 1.0 - sumOfRoles[index] <= error and 1.0 - sumOfRoles[index] >= -error:
+                knownRoles.append(role)
+        return knownRoles
+
+    def __getKnownNotInPlayRoles__(self, inScriptRoles: list[Role]) -> list[Role]:
+        sumOfRoles = [0.0 for role in inScriptRoles]
+        for seat, roles in enumerate(self.roleGrid):
+            for roleIndex, weight in enumerate(roles):
+                sumOfRoles[roleIndex] += weight
+
+        error = 0.00005
+        knownRoles: list[Role] = []
+        for index, role in enumerate(inScriptRoles):
+            if sumOfRoles[index] <= error and sumOfRoles[index] >= -error:
+                knownRoles.append(role)
+        return knownRoles
+
+
+    def __getKnownPlayers__(self, inScriptRoles: list[Role]) -> list[tuple[int, Role]]:
+        knownPlayers = []
+        error = 0.00005
+        for seat, roles in enumerate(self.roleGrid):
+            knownRole = [
+                inScriptRoles[roleIndex]
+                for roleIndex, roleValue in enumerate(roles)
+                if 1.0 - roleValue <= error and 1.0 - roleValue >= -error
+            ]
+            if len(knownRole) > 0:
+                # There should only be one role per person
+                knownPlayers.append((seat, knownRole[0]))
+        return knownPlayers
+
+    def __learnIsRole__(
         self, knowledge: list[Knowledge], inScriptRoles: list[Role], playerCount: int
     ):
         knowledgeST = [data for data in knowledge if data.source is None]
@@ -87,32 +128,32 @@ class Player:
                         self.roleGrid[seat][roleIndex] = 0.0
 
             # Reduce and recalculate the soft claims by the hard claims
-            removedRolesForClaim = []
-            for softClaim in softClaims:
-                if learnedRole in softClaim.information:
-                    removedRolesForClaim.append((softClaim, learnedRole))
+            # removedRolesForClaim = []
+            # for softClaim in softClaims:
+            #     if learnedRole in softClaim.information:
+            #         removedRolesForClaim.append((softClaim, learnedRole))
 
-            for softClaim in softClaims:
-                targetSeat: int = softClaim.target
-                learnedRoles: tuple[Role] = []
+            # for softClaim in softClaims:
+            #     targetSeat: int = softClaim.target
+            #     learnedRoles: tuple[Role] = []
 
-                learnedRoles = [
-                    role
-                    for role in softClaim.information
-                    if role
-                    not in [
-                        removedRole
-                        for (claim, removedRole) in removedRolesForClaim
-                        if claim is softClaim
-                    ]
-                ]
+            #     learnedRoles = [
+            #         role
+            #         for role in softClaim.information
+            #         if role
+            #         not in [
+            #             removedRole
+            #             for (claim, removedRole) in removedRolesForClaim
+            #             if claim is softClaim
+            #         ]
+            #     ]
 
-                for seat, roles in enumerate(self.roleGrid):
-                    for roleIndex, weight in enumerate(roles):
-                        if seat is targetSeat and roleIndex in learnedRoles:
-                            self.roleGrid[seat][roleIndex] = 1.0 / len(learnedRoles)
-                        elif seat is targetSeat or roleIndex in learnedRoles:
-                            self.roleGrid[seat][roleIndex] = 0.0
+            #     for seat, roles in enumerate(self.roleGrid):
+            #         for roleIndex, weight in enumerate(roles):
+            #             if seat is targetSeat and roleIndex in learnedRoles:
+            #                 self.roleGrid[seat][roleIndex] = 1.0 / len(learnedRoles)
+            #             elif seat is targetSeat or roleIndex in learnedRoles:
+            #                 self.roleGrid[seat][roleIndex] = 0.0
 
     def buildRoleGrid(self, inScriptRoles: list[Role]):
         playerCount: int = 0
@@ -178,7 +219,7 @@ class Player:
                             rolesWithInfo.append(role)
 
         if len(isRoleKnowledge) > 0:
-            self.__isRole__(
+            self.__learnIsRole__(
                 knowledge=isRoleKnowledge,
                 inScriptRoles=inScriptRoles,
                 playerCount=playerCount,
