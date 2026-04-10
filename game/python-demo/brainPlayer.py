@@ -110,11 +110,6 @@ class Player:
     def __learnSTRoleInfo__(
         self, knowledge: list[Knowledge], inScriptRoles: list[Role], playerCount: int
     ):
-        # Is this really necessary?
-        # self.roleGrid = [
-        #     [None for role in inScriptRoles] for player in range(playerCount)
-        # ]
-
         knownSeats: list[int] = []
         knownRoles: list[Role] = []
 
@@ -124,7 +119,7 @@ class Player:
 
             # Uhhh, space clams?
             if len(targets) == 0 or len(roles) == 0:
-                print(f"Useless info: {claim}\n{targets}\n{roles}")
+                print(f"Useless info: {claim}\nTargets: {targets}\nRoles: {roles}")
                 continue
 
             # Logical Hard Claim
@@ -135,35 +130,24 @@ class Player:
                 if roles[0] not in knownRoles:
                     knownRoles.append(roles[0])
 
-                self.roleGrid[targets[0]][roles[0]] = 1.0
                 for index, role in enumerate(inScriptRoles):
-                    if index == roles[0]:
-                        continue
                     self.roleGrid[targets[0]][index] = 0.0
 
                 for seat in range(playerCount):
-                    if seat == targets[0]:
-                        continue
                     self.roleGrid[seat][roles[0]] = 0.0
 
-            # Learning multiple players are multiple roles
-            if len(targets) == 1 and len(roles) > 1:
-                
+                self.roleGrid[targets[0]][roles[0]] = 1.0
+
+            if len(targets) >= 1 and len(roles) >= 1:  
+                for seat in range(playerCount):
+                    for index, role in enumerate(inScriptRoles):
+                        if seat in targets or role in roles:
+                            self.roleGrid[seat][index] = 0.0
+
+                for seat in targets:
+                    for role in roles:
+                        self.roleGrid[seat][role] = 1/len(roles)
                 continue
-
-
-
-            # for seat in claim.targets:
-            #     for role in claim.information:
-        
-        # for claim in knowledge:
-        #     for seat in claim.targets:
-        #         for role in claim.information:
-        #             learnedRoleGrid[seat][role] = 1.0 / (len(claim.targets) * len(claim.information))
-
-        for row in self.roleGrid:
-            print(row)
-        print("")
 
         # Get the Hard Claims
         # hardClaims = [info for info in knowledge if len(info.information) == 1]
