@@ -10,7 +10,7 @@ from brainPlayer import Player
 
 def main() -> None:
     r.seed(a=None, version=2)
-    playerCount = 7
+    playerCount = 15
     inScriptRoles = [_ for _ in Role if _ >= Role.WASHERWOMAN]
     roles, reminderTokens = getRoles(
         playerCount=playerCount, inScriptRoles=inScriptRoles
@@ -30,6 +30,12 @@ def main() -> None:
     # firstNightInfo(players=players, inScriptRoles=inScriptRoles)
 
     # Debug printing
+    # targetPlayer = 0
+    # for row in players[targetPlayer].roleGrid:
+    #     for value in row:
+    #         print (f"{value:.2f}", end=", ")
+    #     print ("")
+
     # targetPlayer = [player.seat for player in players if isMinion(player.role)][0]
     # playerSum = [0.0 for seat in range(playerCount)]
     # print (f"Seat {targetPlayer}:")
@@ -63,7 +69,6 @@ def main() -> None:
     # knownPlayers = players[targetPlayer].__getKnownPlayers__(inScriptRoles=inScriptRoles)
     # print (knownPlayers)
 
-
     # for targetPlayer in range(playerCount):
     #     playerSum = [0.0 for seat in range(playerCount)]
     #     for role in inScriptRoles:
@@ -71,7 +76,7 @@ def main() -> None:
     #         for seatNum, seat in enumerate(players[targetPlayer].roleGrid):
     #             roleSum += seat[role]
     #             playerSum[seatNum] += seat[role]
-    #     print(f"Seat {targetPlayer:<6} {players[targetPlayer].role.name:<14}:", end="\t\t")
+    #     print(f"Seat {targetPlayer:<6} {players[targetPlayer].role.name:<14}:", end="")
     #     for seat, player in enumerate(playerSum):
     #         print(f"{player:.5f}", end=" ")
     #     print("")
@@ -90,15 +95,15 @@ def firstNightInfo(players: list[Player], inScriptRoles: list[Role]) -> None:
     minions = [player for player in players if isMinion(player.role)]
     for minion in minions:
         knowledge: list[Knowledge] = []
-        for otherMinion in [_ for _ in minions if _ is not minion]:
-            otherMinionSeat = players.index(otherMinion)
-            knowledge.append(Knowledge(
+        knowledge.append(
+            Knowledge(
                 0,
                 None,
-                otherMinionSeat,
+                [otherMinion.seat for otherMinion in minions if otherMinion.seat != minion.seat],
                 InfoType.IS_ROLE,
                 [Role.BARON, Role.POISONER, Role.SCARLET_WOMAN, Role.SPY],
-            ))
+            )
+        )
         minion.learnAndRebuildGrid(inScriptRoles=inScriptRoles, learnedInfo=knowledge)
 
     # Demon learns minions and their bluffs
