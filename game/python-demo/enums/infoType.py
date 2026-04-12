@@ -9,5 +9,6 @@ class InfoType(IntEnum):
     INPLAY_ROLE = 5
     
     IS_ROLE = 10
+    IS_NOT_ROLE = 11
 
     

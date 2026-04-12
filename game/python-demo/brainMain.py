@@ -3,6 +3,7 @@
 
 from brainHelper import *
 from enums.roles import Role
+
 # from enums.infoType import *
 # from knowledge import *
 from brainPlayer import Player
@@ -11,7 +12,7 @@ from brainTest import *
 
 def main() -> None:
     r.seed(a=None, version=2)
-    playerCount = 12
+    playerCount = 7
     inScriptRoles = [_ for _ in Role if _ >= Role.WASHERWOMAN]
     roles, reminderTokens = getRoles(
         playerCount=playerCount, inScriptRoles=inScriptRoles
@@ -37,8 +38,10 @@ def main() -> None:
     # targetPlayer = [player for player in players if isMinion(player.role)][0]
     # testPrintTargetGridSums(targetPlayer=targetPlayer, playerCount=playerCount, inScriptRoles=inScriptRoles)
 
-    # targetPlayer = [player.seat for player in players if isDemon(player.role)][0]
-    # testPrintTargetGridSums(targetPlayer=targetPlayer, playerCount=playerCount, inScriptRoles=inScriptRoles)
+    # targetPlayer = [player for player in players if isDemon(player.role)][0]
+    # testPrintTargetGridSums(
+    #     targetPlayer=targetPlayer, playerCount=playerCount, inScriptRoles=inScriptRoles
+    # )
 
     # targetPlayer = players[0]
     # testPrintTargetGridSums(targetPlayer=targetPlayer, playerCount=playerCount, inScriptRoles=inScriptRoles)
@@ -55,7 +58,7 @@ def main() -> None:
     # knownPlayers = players[targetPlayer].__getKnownPlayers__(inScriptRoles=inScriptRoles)
     # print (knownPlayers)
 
-    # testGridSums(players=players, playerCount=playerCount, inScriptRoles=inScriptRoles)
+    # testPrintAllGridSums(players=players, playerCount=playerCount, inScriptRoles=inScriptRoles)
 
     # for seat in range(playerCount):
     #     print(f"Seat {seat} {players[seat].role.name}")
@@ -94,6 +97,11 @@ def firstNightInfo(players: list[Player], inScriptRoles: list[Role]) -> None:
                 [Role.BARON, Role.POISONER, Role.SCARLET_WOMAN, Role.SPY],
             )
         )
+        knowledge.append(
+            Knowledge(
+                0, None, [demon.seat for demon in demons], InfoType.IS_ROLE, [Role.IMP]
+            )
+        )
         minion.learnAndRebuildGrid(inScriptRoles=inScriptRoles, learnedInfo=knowledge)
 
     # Demon learns minions and bluffs
@@ -114,7 +122,7 @@ def firstNightInfo(players: list[Player], inScriptRoles: list[Role]) -> None:
             Knowledge(
                 0,
                 None,
-                [player.seat for player in players],
+                None,
                 InfoType.IS_NOT_ROLE,
                 r.sample(bluffableRoles, 3),
             )

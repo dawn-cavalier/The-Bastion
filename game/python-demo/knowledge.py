@@ -22,7 +22,7 @@ class Knowledge:
         self.information = information
 
     def __str__(self) -> str:
-        if self.infoType is InfoType.IS_ROLE:
+        if self.infoType is InfoType.IS_ROLE or self.infoType is InfoType.IS_NOT_ROLE:
             if self.source is None:
                 return f"On day {self.day}, learned Seats {self.targets} {self.infoType.name} {self.information} from the Storyteller."
             return f"On day {self.day}, learned Seats {self.targets}  {self.infoType.name} {self.information} from Seat {self.source}."
