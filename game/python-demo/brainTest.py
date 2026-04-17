@@ -25,7 +25,7 @@ def testPrintTargetGridSums(targetPlayer: Player, playerCount: int, inScriptRole
             roleSum += seat[role]
             playerSum[seatNum] += seat[role]
             print(f"{seat[role]:.5f}", end=" ")
-        print(f"\n{role.name}: {roleSum:.5f}\n")
+        print(f"\n{role.name}: {roleSum:.5f}")
 
 
 def testPrintAllGridSums(players: list[Player], playerCount: int, inScriptRoles: list[Role]):

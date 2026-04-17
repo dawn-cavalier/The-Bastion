@@ -58,7 +58,7 @@ def main() -> None:
     # knownPlayers = players[targetPlayer].__getKnownPlayers__(inScriptRoles=inScriptRoles)
     # print (knownPlayers)
 
-    # testPrintAllGridSums(players=players, playerCount=playerCount, inScriptRoles=inScriptRoles)
+    testPrintAllGridSums(players=players, playerCount=playerCount, inScriptRoles=inScriptRoles)
 
     # for seat in range(playerCount):
     #     print(f"Seat {seat} {players[seat].role.name}")

@@ -94,163 +94,70 @@ class Player:
                 knownPlayers.append((seat, knownRole[0]))
         return knownPlayers
 
-    def __learnIsRole__(
-        self, knowledge: list[Knowledge], inScriptRoles: list[Role], playerCount: int
+    def __fillInUnknownRoles__(
+        self,
+        knowledgeList: list[Knowledge],
+        startingRoleCounts: tuple[int],
+        inScriptRoles: list[Role],
     ):
-        knowledgeST = [data for data in knowledge if data.source is None]
-        knowledgePlayer = [data for data in knowledge if data.source is not None]
-
-        if len(knowledgeST) > 0:
-            self.__learnSTRoleInfo__(
-                knowledge=knowledgeST,
-                inScriptRoles=inScriptRoles,
-                playerCount=playerCount,
-            )
-
-    def __learnSTRoleInfo__(
-        self, knowledge: list[Knowledge], inScriptRoles: list[Role], playerCount: int
-    ):
-        knownSeats: list[int] = []
-        knownRoles: list[Role] = []
-
-        for claim in knowledge:
-            targets: list[int] = [target for target in claim.targets if target not in knownSeats]
-            roles: list[Role] = [role for role in claim.information if role not in knownRoles]
-
-            # Uhhh, space clams?
-            if len(targets) == 0 or len(roles) == 0:
-                print(f"Useless info: {claim}\nTargets: {targets}\nRoles: {roles}")
-                continue
-
-            # Logical Hard Claim
-            if len(targets) == 1 and len(roles) == 1:
-                if targets[0] not in knownSeats:
-                    knownSeats.append(targets[0])
-
-                if roles[0] not in knownRoles:
-                    knownRoles.append(roles[0])
-
-                for index, role in enumerate(inScriptRoles):
-                    self.roleGrid[targets[0]][index] = 0.0
-
-                for seat in range(playerCount):
-                    self.roleGrid[seat][roles[0]] = 0.0
-
-                self.roleGrid[targets[0]][roles[0]] = 1.0
-
-            if len(targets) >= 1 and len(roles) >= 1:  
-                for seat in range(playerCount):
-                    for index, role in enumerate(inScriptRoles):
-                        if seat in targets or role in roles:
-                            self.roleGrid[seat][index] = 0.0
-
-                for seat in targets:
-                    for role in roles:
-                        self.roleGrid[seat][role] = 1/len(roles)
-                continue
-
-    def buildRoleGrid(self, inScriptRoles: list[Role]):
-        playerCount: int = 0
-        townsfolkCount: int = 0
-        outsiderCount: int = 0
-        minionCount: int = 0
-        demonCount: int = 0
-        inPlayRoles: list[Role] = []
-
         townsfolk = [role for role in inScriptRoles if isTownsfolk(role)]
         outsiders = [role for role in inScriptRoles if isOutsider(role)]
         minions = [role for role in inScriptRoles if isMinion(role)]
         demons = [role for role in inScriptRoles if isDemon(role)]
-
-        playerCount = [
-            knowledge.information
-            for knowledge in self.knowledgeBank
-            if knowledge.infoType is InfoType.COUNT_PLAYERS
-        ][0]
-
-        self.roleGrid = [
-            [None for role in inScriptRoles] for seat in range(playerCount)
-        ]
-
-        seatsWithInfo: list[Role] = []
-        rolesWithInfo: list[Role] = []
-        isRoleKnowledge: list[Knowledge] = []
 
         knownTownsfolk: float = 0.0
         knownOutsider: float = 0.0
         knownMinion: float = 0.0
         knownDemon: float = 0.0
 
-        for knowledge in self.knowledgeBank:
+        startingTownsfolk, startingOutsider, startingMinion, startingDemon = (
+            startingRoleCounts
+        )
+        playerCount = (
+            startingTownsfolk + startingOutsider + startingMinion + startingDemon
+        )
+
+        for knowledge in knowledgeList:
             match knowledge.infoType:
-                case InfoType.COUNT_TOWNSFOLK:
-                    townsfolkCount = knowledge.information
-                case InfoType.COUNT_OUTSIDERS:
-                    outsiderCount = knowledge.information
-                case InfoType.COUNT_MINIONS:
-                    minionCount = knowledge.information
-                case InfoType.COUNT_DEMONS:
-                    demonCount = knowledge.information
-                case InfoType.INPLAY_ROLE:
-                    if knowledge.information not in inPlayRoles:
-                        inPlayRoles.append(knowledge.information)
                 case InfoType.IS_ROLE:
-                    isRoleKnowledge.append(knowledge)
-
-                    # TODO: Move this to somewhere safer
                     for target in knowledge.targets:
-                        if target not in seatsWithInfo:
-                            seatsWithInfo.append(target)
-                            for role in knowledge.information:
-                                if isTownsfolk(role):
-                                    knownTownsfolk += 1 / len(knowledge.information)
-                                if isOutsider(role):
-                                    knownOutsider += 1 / len(knowledge.information)
-                                if isMinion(role):
-                                    knownMinion += 1 / len(knowledge.information)
-                                if isDemon(role):
-                                    knownDemon += 1 / len(knowledge.information)
+                        for role in knowledge.information:
+                            if isTownsfolk(role):
+                                knownTownsfolk += 1 / len(knowledge.information)
+                            if isOutsider(role):
+                                knownOutsider += 1 / len(knowledge.information)
+                            if isMinion(role):
+                                knownMinion += 1 / len(knowledge.information)
+                            if isDemon(role):
+                                knownDemon += 1 / len(knowledge.information)
 
-                    for role in knowledge.information:
-                        if role not in rolesWithInfo:
-                            rolesWithInfo.append(role)
                 case InfoType.IS_NOT_ROLE:
-                    for role in knowledge.information:
-                        if role not in rolesWithInfo:
-                            rolesWithInfo.append(role)
+                    # for role in knowledge.information:
+                    #     if isTownsfolk(role):
+                    #         knownTownsfolk += 1
+                    #     if isOutsider(role):
+                    #         knownOutsider += 1
+                    #     if isMinion(role):
+                    #         knownMinion += 1
+                    #     if isDemon(role):
+                    #         knownDemon += 1
+                    continue
 
-                        # TODO: Move this to somewhere safer
-                        if isTownsfolk(role):
-                            knownTownsfolk += 1
-                        if isOutsider(role):
-                            knownOutsider += 1
-                        if isMinion(role):
-                            knownMinion += 1
-                        if isDemon(role):
-                            knownDemon += 1
-
-        if len(isRoleKnowledge) > 0:
-            self.__learnIsRole__(
-                knowledge=isRoleKnowledge,
-                inScriptRoles=inScriptRoles,
-                playerCount=playerCount,
-            )
-
-        unknownTownsfolk: float = townsfolkCount - knownTownsfolk
-        unknownOutsider: float = outsiderCount - knownOutsider
-        unknownMinion: float = minionCount - knownMinion
-        unknownDemon: float = demonCount - knownDemon
+        unknownTownsfolk: float = startingTownsfolk - knownTownsfolk
+        unknownOutsider: float = startingOutsider - knownOutsider
+        unknownMinion: float = startingMinion - knownMinion
+        unknownDemon: float = startingDemon - knownDemon
 
         if Role.BARON in inScriptRoles:
-            adjustment = 2.0 * (minionCount / len(minions))
+            adjustment = 2.0 * (startingMinion / len(minions))
             unknownOutsider += adjustment
             unknownTownsfolk -= adjustment
 
         if Role.DRUNK in inScriptRoles:
-            adjustment = outsiderCount / len(outsiders)
+            adjustment = startingOutsider / len(outsiders)
             if Role.BARON in inScriptRoles:
-                adjustment += ((outsiderCount + 2) / len(outsiders)) * (
-                    minionCount / len(minions)
+                adjustment += ((startingOutsider + 2) / len(outsiders)) * (
+                    startingMinion / len(minions)
                 )
             unknownOutsider -= adjustment
             unknownTownsfolk += adjustment
@@ -272,11 +179,7 @@ class Player:
             unknownDemon = 0.0
 
         for seat in range(playerCount):
-            if seat in seatsWithInfo:
-                continue
             for index, role in enumerate(inScriptRoles):
-                if role in rolesWithInfo:
-                    continue
                 if isTownsfolk(role):
                     self.roleGrid[seat][index] = unknownTownsfolk
                 elif isOutsider(role):
@@ -288,10 +191,124 @@ class Player:
                 else:
                     raise Exception("Invalid Role Passed In!")
                 
-        for seat in range(playerCount):
-            for index, role in enumerate(inScriptRoles):
-                if self.roleGrid[seat][index] is None:
-                    self.roleGrid[seat][index] = 0.0
+        # Zero out not in play roles
+        for knowledge in knowledgeList:
+            if knowledge.infoType is not InfoType.IS_NOT_ROLE:
+                continue
+
+            for seat in range(playerCount):
+                for index, role in enumerate(inScriptRoles):
+                    if role in knowledge.information:
+                        self.roleGrid[seat][index] = 0.0
+
+
+
+    def __learnIsRole__(
+        self, knowledge: list[Knowledge], inScriptRoles: list[Role], playerCount: int
+    ):
+        knowledgeST = [data for data in knowledge if data.source is None]
+        knowledgePlayer = [data for data in knowledge if data.source is not None]
+
+        if len(knowledgeST) > 0:
+            self.__learnSTRoleInfo__(
+                knowledge=knowledgeST,
+                inScriptRoles=inScriptRoles,
+                playerCount=playerCount,
+            )
+
+    def __learnSTRoleInfo__(
+        self, knowledge: list[Knowledge], inScriptRoles: list[Role], playerCount: int
+    ):
+        knownSeats: list[int] = []
+        knownRoles: list[Role] = []
+
+        for claim in knowledge:
+            targets: list[int] = [
+                target for target in claim.targets if target not in knownSeats
+            ]
+            roles: list[Role] = [
+                role for role in claim.information if role not in knownRoles
+            ]
+
+            # Uhhh, space clams?
+            if len(targets) == 0 or len(roles) == 0:
+                # print(f"Useless info: {claim}\nTargets: {targets}\nRoles: {roles}")
+                continue
+
+            # Logical Hard Claim
+            if len(targets) == 1 and len(roles) == 1:
+                if targets[0] not in knownSeats:
+                    knownSeats.append(targets[0])
+
+                if roles[0] not in knownRoles:
+                    knownRoles.append(roles[0])
+
+                for index, role in enumerate(inScriptRoles):
+                    self.roleGrid[targets[0]][index] = 0.0
+
+                for seat in range(playerCount):
+                    self.roleGrid[seat][roles[0]] = 0.0
+
+                self.roleGrid[targets[0]][roles[0]] = 1.0
+
+            if len(targets) >= 1 and len(roles) >= 1:
+                for seat in range(playerCount):
+                    for index, role in enumerate(inScriptRoles):
+                        if seat in targets or role in roles:
+                            self.roleGrid[seat][index] = 0.0
+
+                for seat in targets:
+                    for role in roles:
+                        self.roleGrid[seat][role] = 1 / len(roles)
+                continue
+
+    def buildRoleGrid(self, inScriptRoles: list[Role]):
+        playerCount = [
+            knowledge.information
+            for knowledge in self.knowledgeBank
+            if knowledge.infoType is InfoType.COUNT_PLAYERS
+        ][0]
+
+        # Reset the Grid
+        self.roleGrid = [[0.0 for role in inScriptRoles] for seat in range(playerCount)]
+
+        isRoleKnowledge: list[Knowledge] = []
+        isNotRoleKnowledge: list[Knowledge] = []
+
+        playerCount: int = 0
+        townsfolkCount: int = 0
+        outsiderCount: int = 0
+        minionCount: int = 0
+        demonCount: int = 0
+
+        for knowledge in self.knowledgeBank:
+            match knowledge.infoType:
+                case InfoType.COUNT_TOWNSFOLK:
+                    townsfolkCount = knowledge.information
+                case InfoType.COUNT_OUTSIDERS:
+                    outsiderCount = knowledge.information
+                case InfoType.COUNT_MINIONS:
+                    minionCount = knowledge.information
+                case InfoType.COUNT_DEMONS:
+                    demonCount = knowledge.information
+                case InfoType.IS_ROLE:
+                    isRoleKnowledge.append(knowledge)
+                case InfoType.IS_NOT_ROLE:
+                    isNotRoleKnowledge.append(knowledge)
+
+        playerCount = townsfolkCount + outsiderCount + minionCount + demonCount
+        self.__fillInUnknownRoles__(
+            knowledgeList=isRoleKnowledge + isNotRoleKnowledge,
+            startingRoleCounts=(townsfolkCount, outsiderCount, minionCount, demonCount),
+            inScriptRoles=inScriptRoles,
+        )
+
+        if len(isRoleKnowledge) > 0:
+            self.__learnIsRole__(
+                knowledge=isRoleKnowledge,
+                inScriptRoles=inScriptRoles,
+                playerCount=playerCount,
+            )
 
     def learnAndRebuildGrid(
         self, inScriptRoles: list[Role], learnedInfo: list[Knowledge]
